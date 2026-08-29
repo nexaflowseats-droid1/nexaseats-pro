@@ -75,8 +75,13 @@ export function useOrg() {
 
 /** Role helpers mirroring the database RLS model. */
 export function canManageEvents(role: OrgRole | null) {
-  return role === "owner" || role === "admin" || role === "manager";
+  return role === "owner" || role === "event_manager";
 }
 export function canManageOrg(role: OrgRole | null) {
-  return role === "owner" || role === "admin";
+  return role === "owner";
 }
+export const ROLE_LABEL: Record<OrgRole, string> = {
+  owner: "Organization Owner",
+  event_manager: "Event Manager",
+  event_staff: "Event Staff",
+};
