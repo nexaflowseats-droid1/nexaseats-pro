@@ -65,7 +65,6 @@ export function SiteHeader() {
             </Link>
             <Link
               to="/auth"
-              search={{ mode: "signup" }}
               className="rounded-[8px] bg-primary px-4 py-2 font-display text-sm font-semibold text-primary-foreground ring-1 ring-primary/40 transition-colors hover:bg-primary-bright"
             >
               Start Free
