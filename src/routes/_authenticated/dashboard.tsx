@@ -95,8 +95,9 @@ function useOverview(orgId: string | null) {
         })),
         totals: {
           events: events?.length ?? 0,
-          upcoming: (events ?? []).filter((e) => e.event_date >= today && e.status !== "archived")
-            .length,
+          upcoming: (events ?? []).filter(
+            (e) => (e.event_date ?? "") >= today && e.status !== "archived",
+          ).length,
           guests: g.length,
           checkedIn: c.length,
           pending: g.filter((x) => x.rsvp_status === "pending").length,
