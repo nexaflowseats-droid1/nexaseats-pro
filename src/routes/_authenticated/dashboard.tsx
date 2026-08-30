@@ -31,7 +31,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 type Overview = {
-  events: { id: string; name: string; event_date: string; status: string; venue: string | null }[];
+  events: {
+    id: string;
+    name: string;
+    event_date: string | null;
+    status: string;
+    venue: string | null;
+  }[];
   totals: {
     events: number;
     upcoming: number;
