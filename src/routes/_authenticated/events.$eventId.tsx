@@ -17,6 +17,7 @@ import {
   formatTime,
   STATUS_TONE,
   RSVP_TONE,
+  type EventStatus,
 } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/events/$eventId")({
@@ -316,7 +317,7 @@ function EventDetailPage() {
                 save.mutate({
                   name: String(fd.get("name") ?? "").trim().slice(0, 120),
                   description: String(fd.get("description") ?? "").slice(0, 2000) || null,
-                  status: String(fd.get("status")),
+                  status: String(fd.get("status")) as EventStatus,
                 });
               }}
             >
