@@ -71,7 +71,11 @@ function EventDetailPage() {
   }, [guests, assignments, checkIns]);
 
   const save = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: {
+      name: string;
+      description: string | null;
+      status: EventStatus;
+    }) => {
       const { error } = await supabase.from("events").update(patch).eq("id", eventId);
       if (error) throw error;
     },
