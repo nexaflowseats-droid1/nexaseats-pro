@@ -78,11 +78,11 @@ function EventsPage() {
         created_by: userData.user?.id ?? null,
         name: values.name,
         description: values.description || null,
-        category: values.category || null,
+        category: values.category || undefined,
         event_date: values.event_date,
         start_time: values.start_time || null,
         end_time: values.end_time || null,
-        capacity: values.capacity ?? null,
+        capacity: values.capacity ?? undefined,
         venue_id: values.venue_id || null,
         status: "draft",
       });
