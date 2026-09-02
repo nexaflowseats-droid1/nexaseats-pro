@@ -19,6 +19,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SolutionsRouteImport } from './routes/solutions'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGuestsRouteImport } from './routes/_authenticated/guests'
+import { Route as AuthenticatedSeatingRouteImport } from './routes/_authenticated/seating'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 
@@ -71,6 +72,11 @@ const AuthenticatedGuestsRoute = AuthenticatedGuestsRouteImport.update({
   path: '/guests',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSeatingRoute = AuthenticatedSeatingRouteImport.update({
+  id: '/seating',
+  path: '/seating',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEventsIndexRoute =
   AuthenticatedEventsIndexRouteImport.update({
     id: '/events/',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/solutions': typeof SolutionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/guests': typeof AuthenticatedGuestsRoute
+  '/seating': typeof AuthenticatedSeatingRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
 }
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/solutions': typeof SolutionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/guests': typeof AuthenticatedGuestsRoute
+  '/seating': typeof AuthenticatedSeatingRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
 }
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/solutions': typeof SolutionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/guests': typeof AuthenticatedGuestsRoute
+  '/_authenticated/seating': typeof AuthenticatedSeatingRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
 }
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/dashboard'
     | '/guests'
+    | '/seating'
     | '/events/$eventId'
     | '/events/'
   fileRoutesByTo: FileRoutesByTo
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/dashboard'
     | '/guests'
+    | '/seating'
     | '/events/$eventId'
     | '/events'
   id:
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/_authenticated/dashboard'
     | '/_authenticated/guests'
+    | '/_authenticated/seating'
     | '/_authenticated/events/$eventId'
     | '/_authenticated/events/'
   fileRoutesById: FileRoutesById
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGuestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/seating': {
+      id: '/_authenticated/seating'
+      path: '/seating'
+      fullPath: '/seating'
+      preLoaderRoute: typeof AuthenticatedSeatingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/events/': {
       id: '/_authenticated/events/'
       path: '/events'
@@ -271,6 +290,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGuestsRoute: typeof AuthenticatedGuestsRoute
+  AuthenticatedSeatingRoute: typeof AuthenticatedSeatingRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
 }
@@ -278,6 +298,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGuestsRoute: AuthenticatedGuestsRoute,
+  AuthenticatedSeatingRoute: AuthenticatedSeatingRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
 }
