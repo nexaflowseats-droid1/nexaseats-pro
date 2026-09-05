@@ -18,6 +18,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SolutionsRouteImport } from './routes/solutions'
 import { Route as AuthenticatedCheckInRouteImport } from './routes/_authenticated/check-in'
+import { Route as AuthenticatedCommunicationsRouteImport } from './routes/_authenticated/communications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedGuestsRouteImport } from './routes/_authenticated/guests'
@@ -70,6 +71,12 @@ const AuthenticatedCheckInRoute = AuthenticatedCheckInRouteImport.update({
   path: '/check-in',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCommunicationsRoute =
+  AuthenticatedCommunicationsRouteImport.update({
+    id: '/communications',
+    path: '/communications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -118,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
   '/check-in': typeof AuthenticatedCheckInRoute
+  '/communications': typeof AuthenticatedCommunicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/guests': typeof AuthenticatedGuestsRoute
@@ -135,6 +143,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
   '/check-in': typeof AuthenticatedCheckInRoute
+  '/communications': typeof AuthenticatedCommunicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/guests': typeof AuthenticatedGuestsRoute
@@ -154,6 +163,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
   '/_authenticated/check-in': typeof AuthenticatedCheckInRoute
+  '/_authenticated/communications': typeof AuthenticatedCommunicationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/guests': typeof AuthenticatedGuestsRoute
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/solutions'
     | '/check-in'
+    | '/communications'
     | '/dashboard'
     | '/documents'
     | '/guests'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/solutions'
     | '/check-in'
+    | '/communications'
     | '/dashboard'
     | '/documents'
     | '/guests'
@@ -208,6 +220,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/solutions'
     | '/_authenticated/check-in'
+    | '/_authenticated/communications'
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
     | '/_authenticated/guests'
@@ -293,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckInRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/communications': {
+      id: '/_authenticated/communications'
+      path: '/communications'
+      fullPath: '/communications'
+      preLoaderRoute: typeof AuthenticatedCommunicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -347,6 +367,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckInRoute: typeof AuthenticatedCheckInRoute
+  AuthenticatedCommunicationsRoute: typeof AuthenticatedCommunicationsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedGuestsRoute: typeof AuthenticatedGuestsRoute
@@ -358,6 +379,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckInRoute: AuthenticatedCheckInRoute,
+  AuthenticatedCommunicationsRoute: AuthenticatedCommunicationsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedGuestsRoute: AuthenticatedGuestsRoute,
