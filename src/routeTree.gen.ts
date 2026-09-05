@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SolutionsRouteImport } from './routes/solutions'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedCheckInRouteImport } from './routes/_authenticated/check-in'
 import { Route as AuthenticatedCommunicationsRouteImport } from './routes/_authenticated/communications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -65,6 +66,11 @@ const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
   path: '/solutions',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCheckInRoute = AuthenticatedCheckInRouteImport.update({
   id: '/check-in',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/check-in': typeof AuthenticatedCheckInRoute
   '/communications': typeof AuthenticatedCommunicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/check-in': typeof AuthenticatedCheckInRoute
   '/communications': typeof AuthenticatedCommunicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
   '/solutions': typeof SolutionsRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/check-in': typeof AuthenticatedCheckInRoute
   '/_authenticated/communications': typeof AuthenticatedCommunicationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/pricing'
     | '/solutions'
+    | '/analytics'
     | '/check-in'
     | '/communications'
     | '/dashboard'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/pricing'
     | '/solutions'
+    | '/analytics'
     | '/check-in'
     | '/communications'
     | '/dashboard'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/pricing'
     | '/solutions'
+    | '/_authenticated/analytics'
     | '/_authenticated/check-in'
     | '/_authenticated/communications'
     | '/_authenticated/dashboard'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SolutionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/check-in': {
       id: '/_authenticated/check-in'
       path: '/check-in'
@@ -366,6 +385,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCheckInRoute: typeof AuthenticatedCheckInRoute
   AuthenticatedCommunicationsRoute: typeof AuthenticatedCommunicationsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -378,6 +398,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCheckInRoute: AuthenticatedCheckInRoute,
   AuthenticatedCommunicationsRoute: AuthenticatedCommunicationsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
