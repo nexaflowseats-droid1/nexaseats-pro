@@ -23,24 +23,22 @@ const FIELD =
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Name is required").max(120),
-  phone: z.string().trim().max(40).optional(),
 });
 
 const orgSchema = z.object({
   name: z.string().trim().min(2, "Organization name is required").max(120),
-  brand_color: z
+  primary_color: z
     .string()
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #f5b14a"),
 });
 
 function SettingsPage() {
-  const { currentOrg, currentOrgId, role, refresh } = useOrg();
+  const { currentOrg, currentOrgId, role } = useOrg();
   const admin = canManageOrg(role);
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -50,11 +48,10 @@ function SettingsPage() {
       if (!uid) return;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, phone")
+        .select("full_name")
         .eq("id", uid)
         .maybeSingle();
       setFullName(profile?.full_name ?? "");
-      setPhone(profile?.phone ?? "");
     })();
   }, []);
 
@@ -65,7 +62,7 @@ function SettingsPage() {
       if (!uid) throw new Error("Not signed in");
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name: values.full_name, phone: values.phone || null })
+        .update({ full_name: values.full_name })
         .eq("id", uid);
       if (error) throw error;
     },
@@ -77,13 +74,12 @@ function SettingsPage() {
     mutationFn: async (values: z.infer<typeof orgSchema>) => {
       const { error } = await supabase
         .from("organizations")
-        .update({ name: values.name, brand_color: values.brand_color })
+        .update({ name: values.name, primary_color: values.primary_color })
         .eq("id", currentOrgId!);
       if (error) throw error;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       toast.success("Organization updated");
-      await refresh();
       queryClient.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -106,7 +102,7 @@ function SettingsPage() {
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
-              const parsed = profileSchema.safeParse({ full_name: fullName, phone });
+              const parsed = profileSchema.safeParse({ full_name: fullName });
               if (!parsed.success) {
                 toast.error(parsed.error.issues[0]?.message ?? "Check your details");
                 return;
@@ -125,15 +121,6 @@ function SettingsPage() {
                 value={fullName}
                 maxLength={120}
                 onChange={(e) => setFullName(e.target.value)}
-                className={FIELD}
-              />
-            </label>
-            <label className="block">
-              <span className="label-mono">Phone</span>
-              <input
-                value={phone}
-                maxLength={40}
-                onChange={(e) => setPhone(e.target.value)}
                 className={FIELD}
               />
             </label>
@@ -164,7 +151,7 @@ function SettingsPage() {
               const fd = new FormData(e.currentTarget);
               const parsed = orgSchema.safeParse({
                 name: String(fd.get("name") ?? ""),
-                brand_color: String(fd.get("brand_color") ?? ""),
+                primary_color: String(fd.get("primary_color") ?? ""),
               });
               if (!parsed.success) {
                 toast.error(parsed.error.issues[0]?.message ?? "Check your details");
@@ -187,8 +174,8 @@ function SettingsPage() {
             <label className="block">
               <span className="label-mono">Brand colour</span>
               <input
-                name="brand_color"
-                defaultValue={currentOrg?.organizations.brand_color ?? "#f5b14a"}
+                name="primary_color"
+                defaultValue="#f5b14a"
                 disabled={!admin}
                 className={FIELD}
               />
