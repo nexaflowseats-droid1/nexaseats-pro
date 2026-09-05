@@ -26,6 +26,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedGuestsRouteImport } from './routes/_authenticated/guests'
 import { Route as AuthenticatedInvitationsRouteImport } from './routes/_authenticated/invitations'
 import { Route as AuthenticatedSeatingRouteImport } from './routes/_authenticated/seating'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
@@ -116,6 +117,11 @@ const AuthenticatedSeatingRoute = AuthenticatedSeatingRouteImport.update({
   path: '/seating',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/guests': typeof AuthenticatedGuestsRoute
   '/invitations': typeof AuthenticatedInvitationsRoute
   '/seating': typeof AuthenticatedSeatingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/guests': typeof AuthenticatedGuestsRoute
   '/invitations': typeof AuthenticatedInvitationsRoute
   '/seating': typeof AuthenticatedSeatingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/_authenticated/guests': typeof AuthenticatedGuestsRoute
   '/_authenticated/invitations': typeof AuthenticatedInvitationsRoute
   '/_authenticated/seating': typeof AuthenticatedSeatingRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/guests'
     | '/invitations'
     | '/seating'
+    | '/settings'
     | '/team'
     | '/events/$eventId'
     | '/events/'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/guests'
     | '/invitations'
     | '/seating'
+    | '/settings'
     | '/team'
     | '/events/$eventId'
     | '/events'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/_authenticated/guests'
     | '/_authenticated/invitations'
     | '/_authenticated/seating'
+    | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/events/$eventId'
     | '/_authenticated/events/'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSeatingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/team': {
       id: '/_authenticated/team'
       path: '/team'
@@ -432,6 +451,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGuestsRoute: typeof AuthenticatedGuestsRoute
   AuthenticatedInvitationsRoute: typeof AuthenticatedInvitationsRoute
   AuthenticatedSeatingRoute: typeof AuthenticatedSeatingRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
@@ -447,6 +467,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGuestsRoute: AuthenticatedGuestsRoute,
   AuthenticatedInvitationsRoute: AuthenticatedInvitationsRoute,
   AuthenticatedSeatingRoute: AuthenticatedSeatingRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
