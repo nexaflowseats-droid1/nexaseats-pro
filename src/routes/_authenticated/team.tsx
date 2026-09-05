@@ -68,7 +68,10 @@ function TeamPage() {
           ) : (
             <ul className="divide-y divide-border/60">
               {(team ?? []).map((m) => {
-                const p = m.profiles as { full_name: string | null; email: string | null } | null;
+                const p = m.profiles as unknown as {
+                  full_name: string | null;
+                  email: string | null;
+                } | null;
                 return (
                   <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
