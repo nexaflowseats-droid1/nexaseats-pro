@@ -28,6 +28,7 @@ import { Route as AuthenticatedInvitationsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSeatingRouteImport } from './routes/_authenticated/seating'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as ITokenRouteImport } from './routes/i.$token'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 
@@ -127,6 +128,11 @@ const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ITokenRoute = ITokenRouteImport.update({
+  id: '/i/$token',
+  path: '/i/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEventsIndexRoute =
   AuthenticatedEventsIndexRouteImport.update({
     id: '/events/',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/seating': typeof AuthenticatedSeatingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/i/$token': typeof ITokenRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
 }
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/seating': typeof AuthenticatedSeatingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/i/$token': typeof ITokenRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
 }
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/seating': typeof AuthenticatedSeatingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/i/$token': typeof ITokenRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
 }
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/seating'
     | '/settings'
     | '/team'
+    | '/i/$token'
     | '/events/$eventId'
     | '/events/'
   fileRoutesByTo: FileRoutesByTo
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/seating'
     | '/settings'
     | '/team'
+    | '/i/$token'
     | '/events/$eventId'
     | '/events'
   id:
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/_authenticated/seating'
     | '/_authenticated/settings'
     | '/_authenticated/team'
+    | '/i/$token'
     | '/_authenticated/events/$eventId'
     | '/_authenticated/events/'
   fileRoutesById: FileRoutesById
@@ -287,6 +299,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   PricingRoute: typeof PricingRoute
   SolutionsRoute: typeof SolutionsRoute
+  ITokenRoute: typeof ITokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/i/$token': {
+      id: '/i/$token'
+      path: '/i/$token'
+      fullPath: '/i/$token'
+      preLoaderRoute: typeof ITokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/events/': {
       id: '/_authenticated/events/'
       path: '/events'
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   PricingRoute: PricingRoute,
   SolutionsRoute: SolutionsRoute,
+  ITokenRoute: ITokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
