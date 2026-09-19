@@ -1,13 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { AppShell, Panel, EmptyState, StatCard } from "@/components/app/AppShell";
 import { EventPicker, useActiveEvent } from "@/components/app/EventPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, canManageEvents } from "@/lib/org-context";
 import { useTables, useAssignments, useGuests } from "@/lib/queries";
+import {
+  planSeating,
+  applySeatingPlan,
+  SEATING_STRATEGIES,
+  type SeatingStrategy,
+  type SeatingPlan,
+} from "@/lib/seating-ai.functions";
+
+const QUICK_COMMANDS = [
+  "Seat all family members together",
+  "Move VIP guests closer to the stage",
+  "Create the best networking arrangement",
+  "Optimize the seating plan",
+];
+
 
 export const Route = createFileRoute("/_authenticated/seating")({
   head: () => ({
