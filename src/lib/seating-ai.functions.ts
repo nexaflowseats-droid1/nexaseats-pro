@@ -109,54 +109,49 @@ export const planSeating = createServerFn({ method: "POST" })
       })),
     };
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert event seating planner. Assign every guest to a table without exceeding capacity. Honour must_sit_together and never_together relationships, keep groups/families together, place VIPs at prominent tables, respect accessibility needs, and balance the strategy requested. Use only the provided table ids and guest ids. Respond with the seating_plan tool.",
-          },
-          { role: "user", content: JSON.stringify(payload) },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "seating_plan",
-              description: "Return the optimised seating plan.",
-              parameters: {
-                type: "object",
-                properties: {
-                  summary: { type: "string" },
-                  score: { type: "number" },
-                  conflicts: { type: "array", items: { type: "string" } },
-                  recommendations: { type: "array", items: { type: "string" } },
-                  tables: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        tableId: { type: "string" },
-                        compatibility: { type: "number" },
-                        rationale: { type: "string" },
-                        guestIds: { type: "array", items: { type: "string" } },
-                      },
-                      required: ["tableId", "compatibility", "rationale", "guestIds"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["summary", "score", "conflicts", "recommendations", "tables"],
-                additionalProperties: false,
-              },
+    const planJsonSchema = {
+      type: "object",
+      properties: {
+        summary: { type: "string" },
+        score: { type: "number" },
+        conflicts: { type: "array", items: { type: "string" } },
+        recommendations: { type: "array", items: { type: "string" } },
+        tables: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              tableId: { type: "string" },
+              compatibility: { type: "number" },
+              rationale: { type: "string" },
+              guestIds: { type: "array", items: { type: "string" } },
             },
+            required: ["tableId", "compatibility", "rationale", "guestIds"],
+            additionalProperties: false,
           },
-        ],
-        tool_choice: { type: "function", function: { name: "seating_plan" } },
+        },
+      },
+      required: ["summary", "score", "conflicts", "recommendations", "tables"],
+      additionalProperties: false,
+    };
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "fetch",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-6-astra",
+        stream: true,
+        reasoning: { effort: "low" },
+        instructions:
+          "You are an expert event seating planner. Assign every guest to a table without exceeding capacity. Honour must_sit_together and never_together relationships, keep groups/families together, place VIPs at prominent tables, respect accessibility needs, and follow the requested strategy and any extra instruction. Use only the provided table ids and guest ids.",
+        input: [{ role: "user", content: [{ type: "input_text", text: JSON.stringify(payload) }] }],
+        text: {
+          format: { type: "json_schema", name: "seating_plan", strict: true, schema: planJsonSchema },
+        },
       }),
     });
 
@@ -166,13 +161,41 @@ export const planSeating = createServerFn({ method: "POST" })
       console.error("AI gateway error", response.status, await response.text());
       throw new Error("The seating assistant is unavailable right now");
     }
+    if (!response.body) throw new Error("The seating assistant returned no plan");
 
-    const body = (await response.json()) as {
-      choices?: { message?: { tool_calls?: { function?: { arguments?: string } }[] } }[];
-    };
-    const raw = body.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!raw) throw new Error("The seating assistant returned no plan");
-    const parsed = modelSchema.parse(JSON.parse(raw));
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let text = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const payloadLine = line.slice(5).trim();
+        if (!payloadLine || payloadLine === "[DONE]") continue;
+        try {
+          const evt = JSON.parse(payloadLine) as {
+            type?: string;
+            delta?: string;
+            response?: { output_text?: string };
+          };
+          if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
+            text += evt.delta;
+          } else if (evt.type === "response.completed" && evt.response?.output_text) {
+            text = evt.response.output_text;
+          }
+        } catch {
+          // ignore keep-alive / partial frames
+        }
+      }
+    }
+
+    if (!text.trim()) throw new Error("The seating assistant returned no plan");
+    const parsed = modelSchema.parse(JSON.parse(text));
 
     const tableById = new Map(tables.map((t) => [t.id, t]));
     const guestById = new Map(guestList.map((g) => [g.id, g]));

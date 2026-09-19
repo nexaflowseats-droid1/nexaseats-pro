@@ -1,13 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { AppShell, Panel, EmptyState, StatCard } from "@/components/app/AppShell";
 import { EventPicker, useActiveEvent } from "@/components/app/EventPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, canManageEvents } from "@/lib/org-context";
 import { useTables, useAssignments, useGuests } from "@/lib/queries";
+import {
+  planSeating,
+  applySeatingPlan,
+  SEATING_STRATEGIES,
+  type SeatingStrategy,
+  type SeatingPlan,
+} from "@/lib/seating-ai.functions";
+
+const QUICK_COMMANDS = [
+  "Seat all family members together",
+  "Move VIP guests closer to the stage",
+  "Create the best networking arrangement",
+  "Optimize the seating plan",
+];
+
 
 export const Route = createFileRoute("/_authenticated/seating")({
   head: () => ({
@@ -128,9 +144,43 @@ function SeatingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const runPlan = useServerFn(planSeating);
+  const runApply = useServerFn(applySeatingPlan);
+  const [strategy, setStrategy] = useState<SeatingStrategy>("social");
+  const [instruction, setInstruction] = useState("");
+  const [plan, setPlan] = useState<SeatingPlan | null>(null);
+
+  const generatePlan = useMutation({
+    mutationFn: async () =>
+      (await runPlan({
+        data: {
+          eventId: eventId!,
+          strategy,
+          ...(instruction.trim() ? { instruction: instruction.trim() } : {}),
+        },
+      })) as SeatingPlan,
+    onSuccess: (result) => {
+      setPlan(result);
+      toast.success("Seating plan ready");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const applyPlan = useMutation({
+    mutationFn: async () =>
+      await runApply({ data: { eventId: eventId!, assignments: plan!.assignments } }),
+    onSuccess: (res) => {
+      toast.success(`${res.seated} guests seated`);
+      setPlan(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const overCapacity = (tables ?? []).filter(
     (t) => (assignments ?? []).filter((a) => a.table_id === t.id).length > t.capacity,
   );
+
 
   return (
     <AppShell
@@ -171,6 +221,133 @@ function SeatingPage() {
             <StatCard label="Unseated" value={unseated.length} tone="primary" />
             <StatCard label="Conflicts" value={overCapacity.length} />
           </div>
+
+          {editable && (
+            <Panel title="AI seating intelligence">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={strategy}
+                    onChange={(e) => setStrategy(e.target.value as SeatingStrategy)}
+                    aria-label="Seating strategy"
+                    className="rounded-[8px] border border-border bg-elevated px-2.5 py-1.5 font-mono text-[11px] text-foreground"
+                  >
+                    {SEATING_STRATEGIES.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={instruction}
+                    onChange={(e) => setInstruction(e.target.value)}
+                    placeholder="e.g. Keep John and Peter apart"
+                    maxLength={400}
+                    aria-label="Extra seating instruction"
+                    className="min-w-[220px] flex-1 rounded-[8px] border border-border bg-elevated px-2.5 py-1.5 font-mono text-[11px] text-foreground placeholder:text-subtle"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => generatePlan.mutate()}
+                    disabled={generatePlan.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-[8px] bg-primary px-3 py-1.5 font-display text-xs font-semibold text-primary-foreground hover:bg-primary-bright disabled:opacity-60"
+                  >
+                    <Wand2 className="size-3.5" />
+                    {generatePlan.isPending ? "Thinking…" : "Generate plan"}
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_COMMANDS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setInstruction(c)}
+                      className="rounded-full border border-border px-2.5 py-1 font-mono text-[10px] text-subtle hover:border-primary/50 hover:text-primary"
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+
+                {plan && (
+                  <div className="space-y-3 rounded-[10px] border border-border bg-elevated p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-mono text-[11px] text-foreground">{plan.summary}</p>
+                      <span className="font-mono text-[11px] text-accent">
+                        Score {plan.score}/100
+                      </span>
+                    </div>
+
+                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                      {plan.tables.map((t) => (
+                        <div
+                          key={t.tableId}
+                          className="rounded-[8px] border border-border bg-surface p-2.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-display text-xs text-foreground">
+                              {t.tableName}
+                            </span>
+                            <span className="font-mono text-[10px] text-primary">
+                              {t.compatibility}% fit
+                            </span>
+                          </div>
+                          <p className="mt-1 font-mono text-[10px] text-subtle">{t.rationale}</p>
+                          <p className="mt-1.5 font-mono text-[10px] text-foreground">
+                            {t.guests.map((g) => `${g.name}${g.vip ? " ★" : ""}`).join(", ") ||
+                              "No guests"}
+                          </p>
+                          <p className="mt-1 font-mono text-[10px] text-subtle">
+                            {t.emptySeats} empty seat(s)
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {plan.conflicts.length > 0 && (
+                      <ul className="space-y-1">
+                        {plan.conflicts.map((c) => (
+                          <li key={c} className="font-mono text-[10px] text-destructive">
+                            ⚠ {c}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {plan.recommendations.length > 0 && (
+                      <ul className="space-y-1">
+                        {plan.recommendations.map((r) => (
+                          <li key={r} className="font-mono text-[10px] text-subtle">
+                            • {r}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => applyPlan.mutate()}
+                        disabled={applyPlan.isPending}
+                        className="rounded-[8px] bg-primary px-3 py-1.5 font-display text-xs font-semibold text-primary-foreground hover:bg-primary-bright disabled:opacity-60"
+                      >
+                        {applyPlan.isPending ? "Applying…" : "Apply plan"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPlan(null)}
+                        className="rounded-[8px] border border-border px-3 py-1.5 font-mono text-[11px] text-subtle hover:text-foreground"
+                      >
+                        Discard
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Panel>
+          )}
+
+
 
           <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
             <Panel title="Floor plan">
