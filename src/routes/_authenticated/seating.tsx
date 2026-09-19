@@ -144,9 +144,43 @@ function SeatingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const runPlan = useServerFn(planSeating);
+  const runApply = useServerFn(applySeatingPlan);
+  const [strategy, setStrategy] = useState<SeatingStrategy>("social");
+  const [instruction, setInstruction] = useState("");
+  const [plan, setPlan] = useState<SeatingPlan | null>(null);
+
+  const generatePlan = useMutation({
+    mutationFn: async () =>
+      (await runPlan({
+        data: {
+          eventId: eventId!,
+          strategy,
+          ...(instruction.trim() ? { instruction: instruction.trim() } : {}),
+        },
+      })) as SeatingPlan,
+    onSuccess: (result) => {
+      setPlan(result);
+      toast.success("Seating plan ready");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const applyPlan = useMutation({
+    mutationFn: async () =>
+      await runApply({ data: { eventId: eventId!, assignments: plan!.assignments } }),
+    onSuccess: (res) => {
+      toast.success(`${res.seated} guests seated`);
+      setPlan(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const overCapacity = (tables ?? []).filter(
     (t) => (assignments ?? []).filter((a) => a.table_id === t.id).length > t.capacity,
   );
+
 
   return (
     <AppShell
