@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { OrgProvider } from "@/lib/org-context";
+import { OrgGate } from "@/components/app/OrgOnboarding";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -11,7 +12,9 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: () => (
     <OrgProvider>
-      <Outlet />
+      <OrgGate>
+        <Outlet />
+      </OrgGate>
     </OrgProvider>
   ),
 });
