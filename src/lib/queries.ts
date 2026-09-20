@@ -211,3 +211,35 @@ export function formatTime(value: string | null) {
   if (!value) return "—";
   return value.slice(0, 5);
 }
+
+export function useRelationships(eventId: string | null, guestIds: string[]) {
+  return useQuery({
+    queryKey: ["guest_relationships", eventId, guestIds.length],
+    enabled: !!eventId && guestIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("guest_relationships")
+        .select("*")
+        .in("guest_id", guestIds);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function usePdfGenerations(orgId: string | null) {
+  return useQuery({
+    queryKey: ["pdf_generations", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pdf_generations")
+        .select("*, events(name)")
+        .eq("organization_id", orgId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
