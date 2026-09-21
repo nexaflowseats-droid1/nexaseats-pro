@@ -73,16 +73,16 @@ function DocumentsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  async function download(path: string) {
-    const { data, error } = await supabase.storage
-      .from("event-documents")
-      .createSignedUrl(path, 60);
+  async function signedOpen(bucket: "event-documents" | "generated-pdfs", path: string) {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
     if (error || !data) {
       toast.error(error?.message ?? "Could not create download link");
       return;
     }
     window.open(data.signedUrl, "_blank", "noopener");
   }
+  const download = (path: string) => signedOpen("event-documents", path);
+  const downloadPdf = (path: string) => signedOpen("generated-pdfs", path);
 
   const totalSize = (documents ?? []).reduce((s, d) => s + (d.file_size ?? 0), 0);
 
