@@ -209,7 +209,41 @@ function DocumentsPage() {
             </div>
           )}
         </Panel>
+
+        <Panel title="PDF generation center">
+          {(pdfs ?? []).length === 0 ? (
+            <p className="font-mono text-xs text-subtle">
+              Generated seating plans and guest lists appear here. Create one from the Seating
+              Designer.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {(pdfs ?? []).map((p) => (
+                <li
+                  key={p.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-[8px] border border-border bg-elevated px-3 py-2"
+                >
+                  <span className="font-mono text-[11px] text-foreground">
+                    <span className="text-primary uppercase">{p.type}</span>{" "}
+                    {(p.events as { name: string } | null)?.name ?? "—"}
+                    <span className="ml-2 text-subtle">{formatDate(p.created_at)}</span>
+                  </span>
+                  {p.file_url && (
+                    <button
+                      type="button"
+                      onClick={() => void downloadPdf(p.file_url!)}
+                      className="inline-flex items-center gap-1.5 font-mono text-[10px] text-primary hover:underline"
+                    >
+                      <Download className="size-3" /> Download
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
+
     </AppShell>
   );
 }
