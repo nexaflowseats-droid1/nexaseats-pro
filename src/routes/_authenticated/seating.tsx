@@ -498,7 +498,7 @@ function SeatingPage() {
           <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <Panel
               title="Floor plan"
-              action={
+              actions={
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"

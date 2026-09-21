@@ -7,7 +7,7 @@ import { AppShell, Panel, EmptyState, StatCard } from "@/components/app/AppShell
 import { EventPicker, useActiveEvent } from "@/components/app/EventPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, canManageEvents } from "@/lib/org-context";
-import { useDocuments, formatDate } from "@/lib/queries";
+import { useDocuments, usePdfGenerations, formatDate } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
@@ -27,6 +27,7 @@ function DocumentsPage() {
   const editable = canManageEvents(role);
   const { events, eventId, setEventId } = useActiveEvent();
   const { data: documents, isLoading } = useDocuments(currentOrgId);
+  const { data: pdfs } = usePdfGenerations(currentOrgId);
   const queryClient = useQueryClient();
   const [category, setCategory] = useState("other");
   const [busy, setBusy] = useState(false);
@@ -73,16 +74,16 @@ function DocumentsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  async function download(path: string) {
-    const { data, error } = await supabase.storage
-      .from("event-documents")
-      .createSignedUrl(path, 60);
+  async function signedOpen(bucket: "event-documents" | "generated-pdfs", path: string) {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
     if (error || !data) {
       toast.error(error?.message ?? "Could not create download link");
       return;
     }
     window.open(data.signedUrl, "_blank", "noopener");
   }
+  const download = (path: string) => signedOpen("event-documents", path);
+  const downloadPdf = (path: string) => signedOpen("generated-pdfs", path);
 
   const totalSize = (documents ?? []).reduce((s, d) => s + (d.file_size ?? 0), 0);
 
@@ -209,7 +210,41 @@ function DocumentsPage() {
             </div>
           )}
         </Panel>
+
+        <Panel title="PDF generation center">
+          {(pdfs ?? []).length === 0 ? (
+            <p className="font-mono text-xs text-subtle">
+              Generated seating plans and guest lists appear here. Create one from the Seating
+              Designer.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {(pdfs ?? []).map((p) => (
+                <li
+                  key={p.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-[8px] border border-border bg-elevated px-3 py-2"
+                >
+                  <span className="font-mono text-[11px] text-foreground">
+                    <span className="text-primary uppercase">{p.type}</span>{" "}
+                    {(p.events as { name: string } | null)?.name ?? "—"}
+                    <span className="ml-2 text-subtle">{formatDate(p.created_at)}</span>
+                  </span>
+                  {p.file_url && (
+                    <button
+                      type="button"
+                      onClick={() => void downloadPdf(p.file_url!)}
+                      className="inline-flex items-center gap-1.5 font-mono text-[10px] text-primary hover:underline"
+                    >
+                      <Download className="size-3" /> Download
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
+
     </AppShell>
   );
 }
