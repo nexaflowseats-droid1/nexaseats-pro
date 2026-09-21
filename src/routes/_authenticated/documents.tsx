@@ -7,7 +7,7 @@ import { AppShell, Panel, EmptyState, StatCard } from "@/components/app/AppShell
 import { EventPicker, useActiveEvent } from "@/components/app/EventPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, canManageEvents } from "@/lib/org-context";
-import { useDocuments, formatDate } from "@/lib/queries";
+import { useDocuments, usePdfGenerations, formatDate } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
@@ -27,6 +27,7 @@ function DocumentsPage() {
   const editable = canManageEvents(role);
   const { events, eventId, setEventId } = useActiveEvent();
   const { data: documents, isLoading } = useDocuments(currentOrgId);
+  const { data: pdfs } = usePdfGenerations(currentOrgId);
   const queryClient = useQueryClient();
   const [category, setCategory] = useState("other");
   const [busy, setBusy] = useState(false);
