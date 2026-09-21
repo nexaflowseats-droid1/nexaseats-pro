@@ -148,7 +148,7 @@ export const generateSeatingPdf = createServerFn({ method: "POST" })
       color: muted,
     });
 
-    y -= 28;
+    y = Math.min(y - 28, qrY - 30);
     page.drawLine({
       start: { x: margin, y },
       end: { x: pageWidth - margin, y },
