@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -222,6 +243,70 @@ export type Database = {
           },
         ]
       }
+      event_credits: {
+        Row: {
+          created_at: string
+          credits_total: number
+          credits_used: number
+          expires_at: string | null
+          guest_limit: number
+          id: string
+          order_id: string
+          organization_id: string | null
+          package_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_total: number
+          credits_used?: number
+          expires_at?: string | null
+          guest_limit: number
+          id?: string
+          order_id: string
+          organization_id?: string | null
+          package_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_total?: number
+          credits_used?: number
+          expires_at?: string | null
+          guest_limit?: number
+          id?: string
+          order_id?: string
+          organization_id?: string | null
+          package_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_credits_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_credits_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_credits_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_tables: {
         Row: {
           capacity: number
@@ -353,6 +438,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      features: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       floor_plan_objects: {
         Row: {
@@ -688,6 +809,87 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount_charged: number
+          amount_usd: number
+          buyer_email: string | null
+          buyer_name: string | null
+          charge_currency: string
+          created_at: string
+          credits_granted: boolean
+          event_date: string | null
+          event_title: string | null
+          fx_rate: number
+          id: string
+          organization_id: string | null
+          package_id: string
+          package_snapshot: Json
+          paid_at: string | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_charged: number
+          amount_usd: number
+          buyer_email?: string | null
+          buyer_name?: string | null
+          charge_currency?: string
+          created_at?: string
+          credits_granted?: boolean
+          event_date?: string | null
+          event_title?: string | null
+          fx_rate?: number
+          id?: string
+          organization_id?: string | null
+          package_id: string
+          package_snapshot?: Json
+          paid_at?: string | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_charged?: number
+          amount_usd?: number
+          buyer_email?: string | null
+          buyer_name?: string | null
+          charge_currency?: string
+          created_at?: string
+          credits_granted?: boolean
+          event_date?: string | null
+          event_title?: string | null
+          fx_rate?: number
+          id?: string
+          organization_id?: string | null
+          package_id?: string
+          package_snapshot?: Json
+          paid_at?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -752,6 +954,204 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      package_features: {
+        Row: {
+          created_at: string
+          custom_value: string | null
+          feature_id: string
+          id: string
+          included: boolean
+          limit_unit: string | null
+          limit_value: number | null
+          package_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_value?: string | null
+          feature_id: string
+          id?: string
+          included?: boolean
+          limit_unit?: string | null
+          limit_value?: number | null
+          package_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_value?: string | null
+          feature_id?: string
+          id?: string
+          included?: boolean
+          limit_unit?: string | null
+          limit_value?: number | null
+          package_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_features_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          event_limit: number
+          group_label: string
+          guest_limit: number
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          savings: number
+          setup_time: string | null
+          slug: string
+          sort_order: number
+          support_level: string | null
+          tier: string
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          event_limit?: number
+          group_label: string
+          guest_limit: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          savings?: number
+          setup_time?: string | null
+          slug: string
+          sort_order?: number
+          support_level?: string | null
+          tier: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          event_limit?: number
+          group_label?: string
+          guest_limit?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          savings?: number
+          setup_time?: string | null
+          slug?: string
+          sort_order?: number
+          support_level?: string | null
+          tier?: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          callback_received_at: string | null
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          metadata: Json
+          order_id: string
+          package_id: string | null
+          paid_at: string | null
+          payment_method: string
+          phone_number: string | null
+          provider_reference: string | null
+          provider_transaction_id: string | null
+          provider_transaction_uuid: string | null
+          redirect_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          callback_received_at?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json
+          order_id: string
+          package_id?: string | null
+          paid_at?: string | null
+          payment_method: string
+          phone_number?: string | null
+          provider_reference?: string | null
+          provider_transaction_id?: string | null
+          provider_transaction_uuid?: string | null
+          redirect_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          callback_received_at?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json
+          order_id?: string
+          package_id?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          phone_number?: string | null
+          provider_reference?: string | null
+          provider_transaction_id?: string | null
+          provider_transaction_uuid?: string | null
+          redirect_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pdf_generations: {
         Row: {
