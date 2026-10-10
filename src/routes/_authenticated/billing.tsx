@@ -1,109 +1,98 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Check } from "lucide-react";
-import { toast } from "sonner";
-import { AppShell, Panel, StatCard } from "@/components/app/AppShell";
-import { useOrg, canManageOrg } from "@/lib/org-context";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { AppShell, EmptyState, Panel, StatCard } from "@/components/app/AppShell";
+import { supabase } from "@/integrations/supabase/client";
+import { formatMoney } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
     meta: [
       { title: "Billing — Nexa Flow Seats" },
-      { name: "description", content: "Review your plan, usage limits and upgrade options." },
+      { name: "description", content: "Event credits, orders and payment history." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: BillingPage,
 });
 
-const PLANS = [
-  {
-    name: "Free",
-    price: "$0",
-    features: ["1 event", "Up to 50 guests", "Basic seating", "Basic QR codes"],
-  },
-  {
-    name: "Professional",
-    price: "$49",
-    features: ["Up to 1,000 guests", "Advanced seating", "QR check-in", "PDF generation", "Analytics"],
-  },
-  {
-    name: "Business",
-    price: "$149",
-    features: ["Unlimited events", "Unlimited guests", "Advanced analytics", "Team management"],
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    features: ["White labeling", "Custom branding", "Custom integrations", "Dedicated support"],
-  },
-];
-
 function BillingPage() {
-  const { currentOrg, role } = useOrg();
-  const admin = canManageOrg(role);
-  const current = currentOrg?.organizations.plan ?? "free";
+  const { data } = useQuery({
+    queryKey: ["billing"],
+    queryFn: async () => {
+      const [credits, orders] = await Promise.all([
+        supabase.from("event_credits").select("*, packages(name)").order("created_at", { ascending: false }),
+        supabase
+          .from("orders")
+          .select("id, reference, status, amount_charged, charge_currency, created_at, package_snapshot")
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+      return { credits: credits.data ?? [], orders: orders.data ?? [] };
+    },
+  });
+  const now = Date.now();
+  const active = (data?.credits ?? []).filter((c) => !c.expires_at || new Date(c.expires_at).getTime() > now);
+  const remaining = active.reduce((s, c) => s + (c.credits_total - c.credits_used), 0);
 
   return (
-    <AppShell title="Billing" subtitle="Plan, usage and invoices">
+    <AppShell title="Billing" subtitle="Event credits, orders and payments">
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard label="Current plan" value={current.toUpperCase()} tone="primary" />
-          <StatCard label="Billing cycle" value="Monthly" />
-          <StatCard label="Status" value="Active" tone="accent" />
+          <StatCard label="Event credits left" value={String(remaining)} tone="primary" />
+          <StatCard label="Active packages" value={String(active.length)} />
+          <StatCard label="Orders" value={String(data?.orders.length ?? 0)} tone="accent" />
         </div>
-
-        <Panel title="Plans">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {PLANS.map((p) => {
-              const active = p.name.toLowerCase() === current.toLowerCase();
-              return (
-                <div
-                  key={p.name}
-                  className={`rounded-xl border p-4 ${
-                    active ? "border-primary/50 bg-primary/5" : "border-border bg-elevated"
-                  }`}
-                >
-                  <p className="label-mono">{p.name}</p>
-                  <p className="mt-1 font-display text-2xl font-medium text-foreground">
-                    {p.price}
-                    {p.price.startsWith("$") && p.price !== "$0" && (
-                      <span className="font-mono text-[11px] text-subtle"> /mo</span>
-                    )}
-                  </p>
-                  <ul className="mt-3 space-y-1.5">
-                    {p.features.map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-start gap-1.5 font-mono text-[11px] text-muted-foreground"
-                      >
-                        <Check className="mt-0.5 size-3 shrink-0 text-accent" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    disabled={active || !admin}
-                    onClick={() =>
-                      toast.info("Checkout isn't connected yet — tell us to enable payments.")
-                    }
-                    className={`mt-4 w-full rounded-[8px] px-3 py-2 font-display text-xs font-semibold transition-colors ${
-                      active
-                        ? "bg-secondary text-muted-foreground"
-                        : "bg-primary text-primary-foreground hover:bg-primary-bright disabled:opacity-50"
-                    }`}
-                  >
-                    {active ? "Current plan" : "Choose plan"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+        <Panel
+          title="Event credits"
+          actions={
+            <Link to="/pricing" className="rounded-[8px] bg-primary px-3 py-1.5 font-display text-xs font-semibold text-primary-foreground">
+              Buy package
+            </Link>
+          }
+        >
+          {active.length === 0 ? (
+            <EmptyState title="No active packages" body="Buy a package to add event credits." />
+          ) : (
+            <ul className="divide-y divide-border font-mono text-xs">
+              {active.map((c) => (
+                <li key={c.id} className="flex justify-between py-2">
+                  <span className="text-foreground">{(c as any).packages?.name}</span>
+                  <span className="text-muted-foreground">
+                    {c.credits_total - c.credits_used}/{c.credits_total} left · up to {c.guest_limit} guests
+                    {c.expires_at ? ` · expires ${new Date(c.expires_at).toLocaleDateString()}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
-
-        <Panel title="Invoices">
-          <p className="font-mono text-xs text-subtle">
-            No invoices yet. Once payments are enabled, receipts appear here.
-          </p>
+        <Panel title="Orders & receipts">
+          {(data?.orders.length ?? 0) === 0 ? (
+            <p className="font-mono text-xs text-subtle">No orders yet.</p>
+          ) : (
+            <table className="w-full font-mono text-xs">
+              <thead>
+                <tr className="text-left">
+                  <th className="label-mono pb-2">Reference</th>
+                  <th className="label-mono pb-2">Package</th>
+                  <th className="label-mono pb-2">Amount</th>
+                  <th className="label-mono pb-2">Status</th>
+                  <th className="label-mono pb-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data!.orders.map((o) => (
+                  <tr key={o.id} className="border-t border-border">
+                    <td className="py-2 text-foreground">{o.reference}</td>
+                    <td className="py-2 text-muted-foreground">{(o.package_snapshot as { name?: string })?.name}</td>
+                    <td className="py-2 text-muted-foreground">{formatMoney(o.amount_charged, o.charge_currency)}</td>
+                    <td className={`py-2 capitalize ${o.status === "paid" ? "text-accent" : "text-subtle"}`}>{o.status}</td>
+                    <td className="py-2 text-subtle">{new Date(o.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </Panel>
       </div>
     </AppShell>
