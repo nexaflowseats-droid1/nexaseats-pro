@@ -6,9 +6,9 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let body: Record<string, any> = {};
+        let body: any = {};
         try {
-          body = (await request.json()) as Record<string, any>;
+          body = await request.json();
         } catch {
           return new Response("Invalid body", { status: 400 });
         }

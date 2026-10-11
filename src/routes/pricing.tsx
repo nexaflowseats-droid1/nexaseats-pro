@@ -131,7 +131,7 @@ function PackageCard({ pkg }: { pkg: PricingPackage }) {
   );
 }
 
-function Cell({ pf }: { pf?: PackageFeature }) {
+function Cell({ pf }: { pf: PackageFeature | undefined }) {
   if (!pf) return <span className="text-subtle">—</span>;
   if (!pf.included) return <X className="mx-auto size-4 text-subtle" aria-label="Not included" />;
   const v = featureValue(pf);

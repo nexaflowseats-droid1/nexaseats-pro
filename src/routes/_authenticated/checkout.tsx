@@ -71,7 +71,7 @@ function CheckoutPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setEmail((e) => e || data.user!.email!);
-      const n = data.user?.user_metadata?.full_name as string | undefined;
+      const n = data.user?.user_metadata?.["full_name"] as string | undefined;
       if (n) setName((v) => v || n);
     });
   }, []);
