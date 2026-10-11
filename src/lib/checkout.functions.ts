@@ -119,8 +119,8 @@ export const startCheckout = createServerFn({ method: "POST" })
         .from("payments")
         .update({
           status: result.status === "successful" ? "processing" : "processing",
-          provider_transaction_uuid: result.transactionUuid,
-          redirect_url: result.redirectUrl,
+          provider_transaction_uuid: result.transactionUuid ?? null,
+          redirect_url: result.redirectUrl ?? null,
           metadata: (result.raw ?? {}) as never,
         })
         .eq("id", payment.id);
