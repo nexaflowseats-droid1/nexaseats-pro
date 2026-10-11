@@ -54,7 +54,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           This page didn't load
         </h1>
         <p className="mt-2 font-mono text-xs text-muted-foreground">
-          {error.message || "Something went wrong. Try again or head back home."}
+          {(error instanceof Error && error.message) || "Something went wrong. Try again or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
