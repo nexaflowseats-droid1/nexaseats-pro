@@ -1270,6 +1270,193 @@ export type Database = {
           },
         ]
       }
+      receipt_emails: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          failure_reason: string | null
+          id: string
+          kind: string
+          last_attempt_at: string | null
+          next_retry_at: string | null
+          order_id: string
+          provider: string
+          provider_message_id: string | null
+          receipt_id: string
+          recipient: string
+          requested_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          kind?: string
+          last_attempt_at?: string | null
+          next_retry_at?: string | null
+          order_id: string
+          provider?: string
+          provider_message_id?: string | null
+          receipt_id: string
+          recipient: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          kind?: string
+          last_attempt_at?: string | null
+          next_retry_at?: string | null
+          order_id?: string
+          provider?: string
+          provider_message_id?: string | null
+          receipt_id?: string
+          recipient?: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_emails_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipt_emails_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipts: {
+        Row: {
+          created_at: string
+          file_path: string | null
+          id: string
+          issued_at: string
+          order_id: string
+          organization_id: string | null
+          payment_id: string
+          receipt_number: string
+          status: string
+          updated_at: string
+          user_id: string
+          verification_code: string
+        }
+        Insert: {
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          issued_at?: string
+          order_id: string
+          organization_id?: string | null
+          payment_id: string
+          receipt_number: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verification_code?: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          issued_at?: string
+          order_id?: string
+          organization_id?: string | null
+          payment_id?: string
+          receipt_number?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          order_id: string
+          payment_id: string
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          id?: string
+          order_id: string
+          payment_id: string
+          reason?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          order_id?: string
+          payment_id?: string
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           capacity: number
@@ -1393,6 +1580,24 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       venues: {
         Row: {
           address: string | null
@@ -1441,9 +1646,18 @@ export type Database = {
         Args: { _org: string; _role: Database["public"]["Enums"]["org_role"] }
         Returns: boolean
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_org_member: { Args: { _org: string }; Returns: boolean }
+      next_receipt_number: { Args: never; Returns: string }
     }
     Enums: {
+      app_role: "admin"
       event_status:
         | "draft"
         | "published"
@@ -1583,6 +1797,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin"],
       event_status: [
         "draft",
         "published",
