@@ -61,7 +61,8 @@ export const startCheckout = createServerFn({ method: "POST" })
     const rate = Number(settings?.find((s) => s.key === "usd_ugx_rate")?.value ?? 3800);
     const currency = settings?.find((s) => s.key === "payment_currency")?.value ?? "UGX";
     const amountUsd = Number(pkg.price);
-    const amountCharged = Math.round(amountUsd * rate);
+    const { computeCharge } = await import("@/lib/billing");
+    const amountCharged = computeCharge(amountUsd, rate);
 
     const reference = `NXS-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     const { data: order, error: orderErr } = await supabaseAdmin
@@ -152,7 +153,8 @@ export const checkPayment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!own) throw new Error("Payment not found");
     const { verifyAndSettle } = await import("@/lib/payments.server");
-    await verifyAndSettle(data.paymentId);
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    await verifyAndSettle(data.paymentId, getRequestHeader("origin") ?? null);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: p } = await supabaseAdmin
       .from("payments")

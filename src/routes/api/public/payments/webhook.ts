@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
         if (!payment) return Response.json({ ok: true, ignored: true });
 
         const { verifyAndSettle } = await import("@/lib/payments.server");
-        const result = await verifyAndSettle(payment.id);
+        const result = await verifyAndSettle(payment.id, new URL(request.url).origin);
         return Response.json({ ok: true, status: result.status });
       },
     },
