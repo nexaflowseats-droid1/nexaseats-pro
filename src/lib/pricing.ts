@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { resolveServiceValue } from '@/lib/billing';
 
 export type PackageRow = Database['public']['Tables']['packages']['Row'];
 export type FeatureRow = Database['public']['Tables']['features']['Row'];
@@ -43,8 +44,15 @@ export function usePricingPackages() {
         .eq('is_active', true)
         .order('sort_order');
       if (error) throw error;
+      const { data: settings } = await supabase
+        .from('app_settings')
+        .select('key, value')
+        .in('key', ['setup_time_standard', 'setup_time_extended', 'support_standard', 'support_extended']);
+      const get = (k: string) => settings?.find((r) => r.key === k)?.value ?? null;
       return (data ?? []).map((p) => ({
         ...p,
+        setup_time: resolveServiceValue(p.setup_time, get(`setup_time_${p.tier}`)).value,
+        support_level: resolveServiceValue(p.support_level, get(`support_${p.tier}`)).value,
         package_features: [...((p as unknown as PricingPackage).package_features ?? [])].sort(
           (a, b) => a.features.sort_order - b.features.sort_order,
         ),
@@ -82,9 +90,10 @@ export function guestsLabel(pkg: Pick<PackageRow, 'guest_limit' | 'event_limit'>
 }
 
 /** Displayed value for a feature row: configured value, limit, or a plain tick. */
-export function featureValue(pf: PackageFeature) {
+export function featureValue(pf: PackageFeature, pkg?: Pick<PackageRow, 'setup_time' | 'support_level'>) {
+  if (pf.features.slug === 'setup-time' && pkg) return pkg.setup_time ?? pf.custom_value ?? null;
+  if (pf.features.slug === 'support' && pkg) return pkg.support_level ?? pf.custom_value ?? null;
   if (pf.custom_value) return pf.custom_value;
   if (pf.limit_value) return `Up to ${pf.limit_value.toLocaleString()} ${pf.limit_unit ?? ''}`.trim();
-  if (VALUE_FEATURES.includes(pf.features.slug)) return 'Configured per package';
   return null;
 }
