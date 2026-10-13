@@ -35,11 +35,11 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
 
-function FeatureList({ items, included }: { items: PackageFeature[]; included: boolean }) {
+function FeatureList({ items, included, pkg }: { items: PackageFeature[]; included: boolean; pkg: PricingPackage }) {
   return (
     <ul className="space-y-1.5">
       {items.map((pf) => {
-        const v = featureValue(pf);
+        const v = featureValue(pf, pkg);
         return (
           <li key={pf.features.id} className="flex items-start gap-2 font-mono text-[11px]">
             {included ? (
@@ -108,11 +108,11 @@ function PackageCard({ pkg }: { pkg: PricingPackage }) {
       </div>
       <div className="mt-4 flex-1 space-y-4">
         <Collapsible title="✓ What's included" count={inc.length}>
-          <FeatureList items={inc} included />
+          <FeatureList items={inc} included pkg={pkg} />
         </Collapsible>
         {exc.length > 0 && (
           <Collapsible title="✕ What's not included" count={exc.length}>
-            <FeatureList items={exc} included={false} />
+            <FeatureList items={exc} included={false} pkg={pkg} />
           </Collapsible>
         )}
       </div>
@@ -131,10 +131,10 @@ function PackageCard({ pkg }: { pkg: PricingPackage }) {
   );
 }
 
-function Cell({ pf }: { pf: PackageFeature | undefined }) {
+function Cell({ pf, pkg }: { pf: PackageFeature | undefined; pkg: PricingPackage }) {
   if (!pf) return <span className="text-subtle">—</span>;
   if (!pf.included) return <X className="mx-auto size-4 text-subtle" aria-label="Not included" />;
-  const v = featureValue(pf);
+  const v = featureValue(pf, pkg);
   return (
     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
       <Check className="size-4 text-accent" aria-label="Included" />
@@ -189,7 +189,7 @@ function Comparison({ title, packages }: { title: string; packages: PricingPacka
                   <td className="py-2 pr-4 text-foreground">{f.name}</td>
                   {packages.map((p) => (
                     <td key={p.id} className="py-2 text-center">
-                      <Cell pf={p.package_features.find((x) => x.features.id === f.id)} />
+                      <Cell pkg={p} pf={p.package_features.find((x) => x.features.id === f.id)} />
                     </td>
                   ))}
                 </tr>

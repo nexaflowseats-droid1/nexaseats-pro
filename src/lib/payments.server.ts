@@ -110,7 +110,7 @@ export async function fetchCollection(uuidOrReference: string): Promise<Provider
  * Applies a verified provider outcome to a payment + its order.
  * Idempotent: credits are granted at most once per order.
  */
-export async function settlePayment(paymentId: string, result: ProviderResult) {
+export async function settlePayment(paymentId: string, result: ProviderResult, appUrl: string | null = null) {
   const { data: payment } = await supabaseAdmin
     .from('payments')
     .select('*, orders(*)')
@@ -174,6 +174,8 @@ export async function settlePayment(paymentId: string, result: ProviderResult) {
         }
       }
     }
+    const { afterPaymentSettled } = await import('@/lib/receipts.server');
+    await afterPaymentSettled(order.id, appUrl);
   } else if (status === 'failed' || status === 'cancelled') {
     if (order.status === 'pending') {
       await supabaseAdmin.from('orders').update({ status }).eq('id', order.id);
@@ -184,20 +186,25 @@ export async function settlePayment(paymentId: string, result: ProviderResult) {
 }
 
 /** Re-checks a payment with the provider and settles it. Never trusts the browser. */
-export async function verifyAndSettle(paymentId: string) {
+export async function verifyAndSettle(paymentId: string, appUrl: string | null = null) {
   const { data: payment } = await supabaseAdmin
     .from('payments')
-    .select('id, status, provider_reference, provider_transaction_uuid')
+    .select('id, status, order_id, provider_reference, provider_transaction_uuid')
     .eq('id', paymentId)
     .maybeSingle();
   if (!payment) return { status: 'unknown' as const };
-  if (payment.status === 'successful') return { status: 'successful' as const };
+  if (payment.status === 'successful') {
+    // Idempotent: makes sure the receipt/email exist if an earlier attempt failed.
+    const { afterPaymentSettled } = await import('@/lib/receipts.server');
+    await afterPaymentSettled(payment.order_id, appUrl);
+    return { status: 'successful' as const };
+  }
 
   const lookup = payment.provider_transaction_uuid ?? payment.provider_reference;
   if (!lookup) return { status: payment.status };
   try {
     const result = await fetchCollection(lookup);
-    const settled = await settlePayment(payment.id, result);
+    const settled = await settlePayment(payment.id, result, appUrl);
     return settled;
   } catch (err) {
     console.error('[payments] verification failed', err);
