@@ -269,7 +269,7 @@ export async function deliverEmail(emailId: string, appUrl: string) {
           allocated: credit?.credits_total ?? 0,
           ref: r.payments.provider_reference ?? "-",
           link: `${appUrl}/billing`,
-          support: s["support_email"],
+          support: s["support_email"] ?? null,
         }),
         attachments: [{ filename: `${r.receipt_number}.pdf`, content: toBase64(bytes) }],
       }),
