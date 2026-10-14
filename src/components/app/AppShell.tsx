@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   UsersRound,
   CreditCard,
   Settings,
+  ShieldCheck,
   ChevronDown,
   LogOut,
   Menu,
@@ -102,6 +103,14 @@ export function AppShell({
     navigate({ to: "/auth", replace: true });
   }
 
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("role", "admin").maybeSingle();
+      return !!data;
+    },
+  });
   const sidebar = (
     <div className="flex h-full flex-col gap-4 p-3">
       <Link to="/dashboard" className="flex items-center gap-2.5 px-1 py-2">
@@ -112,7 +121,7 @@ export function AppShell({
       </Link>
       <OrgSwitcher />
       <nav className="flex-1 space-y-0.5 overflow-y-auto">
-        {NAV.map((n) => {
+        {[...NAV, ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck } as const] : [])].map((n) => {
           const active = pathname === n.to || pathname.startsWith(n.to + "/");
           const Icon = n.icon;
           return (
