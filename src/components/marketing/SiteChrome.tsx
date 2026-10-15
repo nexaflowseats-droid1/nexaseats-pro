@@ -24,7 +24,6 @@ export function BrandLock() {
       <span className="font-display text-sm font-semibold tracking-tight text-foreground">
         Nexa<span className="text-primary"> Flow</span> Seats
       </span>
-      <span className="ml-1 hidden font-mono text-[10px] text-subtle sm:inline">v2.4</span>
     </Link>
   );
 }

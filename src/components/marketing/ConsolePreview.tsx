@@ -23,7 +23,7 @@ export function ConsolePreview() {
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[11px] text-subtle">
           <span className="size-2 rounded-full bg-primary/70" />
-          nexa://console/annual-gala-2026/seating
+          Annual Gala 2026 · Seating
         </div>
         <span className="flex items-center gap-1.5 font-mono text-[11px] text-accent">
           <span className="size-1.5 animate-pulse rounded-full bg-accent" /> live
