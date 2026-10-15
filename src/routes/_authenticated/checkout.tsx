@@ -16,6 +16,11 @@ import {
   validityLabel,
 } from "@/lib/pricing";
 import { checkPayment, startCheckout } from "@/lib/checkout.functions";
+import { Button } from "@/components/ui/button";
+import mtnLogo from "@/assets/payments/mtn.svg.asset.json";
+import airtelLogo from "@/assets/payments/airtel.svg.asset.json";
+import visaLogo from "@/assets/payments/visa.svg.asset.json";
+import mastercardLogo from "@/assets/payments/mastercard.svg.asset.json";
 
 const search = z.object({
   packageId: z.string().optional(),
@@ -28,6 +33,10 @@ export const Route = createFileRoute("/_authenticated/checkout")({
     meta: [
       { title: "Checkout — Nexa Flow Seats" },
       { name: "description", content: "Complete your NexaSeats order." },
+      { property: "og:title", content: "Checkout — Nexa Flow Seats" },
+      { property: "og:description", content: "Complete your NexaSeats order." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -70,7 +79,8 @@ function CheckoutPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.email) setEmail((e) => e || data.user!.email!);
+      const userEmail = data.user?.email;
+      if (userEmail) setEmail((e) => e || userEmail);
       const n = data.user?.user_metadata?.["full_name"] as string | undefined;
       if (n) setName((v) => v || n);
     });
@@ -196,7 +206,15 @@ function CheckoutPage() {
                       }`}
                     >
                       <input type="radio" name="method" checked={method === m} onChange={() => setMethod(m)} className="accent-[var(--primary)]" />
-                      {m === "mobile_money" ? "Mobile Money" : "Card"}
+                      <span className="min-w-0 flex-1">{m === "mobile_money" ? "Mobile Money" : "Card"}</span>
+                      <span className="flex shrink-0 items-center gap-2 rounded-md bg-foreground px-2 py-2">
+                        {(m === "mobile_money"
+                          ? [{ asset: mtnLogo, name: "MTN" }, { asset: airtelLogo, name: "Airtel" }]
+                          : [{ asset: visaLogo, name: "Visa" }, { asset: mastercardLogo, name: "Mastercard" }]
+                        ).map(({ asset, name: brand }) => (
+                          <img key={brand} src={asset.url} alt={brand} className="h-5 w-10 object-contain" />
+                        ))}
+                      </span>
                     </label>
                   ))}
                 </fieldset>
@@ -206,9 +224,9 @@ function CheckoutPage() {
                     <input required inputMode="tel" placeholder="0772 123456" maxLength={20} value={phone} onChange={(e) => setPhone(e.target.value)} className={input} />
                   </label>
                 )}
-                <button type="submit" className="w-full rounded-[8px] bg-primary px-4 py-2.5 font-display text-sm font-semibold text-primary-foreground hover:bg-primary-bright">
+                <Button type="submit" className="w-full h-10 font-display font-semibold">
                   Pay Now {amount && rate ? `· ${formatMoney(amount, rate.currency)}` : ""}
-                </button>
+                </Button>
               </form>
             )}
             {(phase === "processing" || phase === "verifying") && (
@@ -240,8 +258,9 @@ function CheckoutPage() {
                 <X className="size-10 text-destructive" />
                 <p className="font-display text-lg text-foreground">Payment Failed</p>
                 <p className="max-w-md font-mono text-xs text-muted-foreground">{error}</p>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => {
                     setPhase("form");
                     setPaymentId(null);
@@ -250,7 +269,7 @@ function CheckoutPage() {
                   className="rounded-[8px] border border-border px-4 py-2 font-display text-sm text-foreground hover:bg-secondary"
                 >
                   Try again
-                </button>
+                </Button>
               </div>
             )}
           </Panel>
