@@ -163,7 +163,7 @@ export function SectionHeading({
 }) {
   return (
     <div>
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+      <p className="font-mono text-[11px] text-primary">{eyebrow}</p>
       <h2 className="mt-3 max-w-[40ch] text-balance font-display text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
         {title}
       </h2>

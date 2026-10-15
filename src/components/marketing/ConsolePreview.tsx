@@ -42,7 +42,7 @@ export function ConsolePreview() {
 
       <div className="relative h-[260px] border-t border-border sm:h-[320px]">
         <div className="gridbg absolute inset-0" />
-        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded border border-primary/30 bg-primary/10 px-6 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded border border-primary/30 bg-primary/10 px-6 py-1 font-mono text-[10px] text-primary">
           Stage
         </div>
         {TABLES.map((t) => {

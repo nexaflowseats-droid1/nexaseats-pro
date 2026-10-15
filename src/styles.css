@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Nexa Flow Seats — "Terminal seating console" design system.
+ * Nexa Flow Seats — Clean neutral dark SaaS design system.
  * Dark operations-console aesthetic: near-black canvas, amber signal accent,
- * moss for live/positive states, Space Grotesk display + IBM Plex Mono data type.
+ * moss for live/positive states, Inter throughout.
  */
 
 @theme inline {
