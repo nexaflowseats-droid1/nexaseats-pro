@@ -173,11 +173,16 @@ export function useTeam(orgId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select("id, role, created_at, user_id, profiles(full_name, email, avatar_url)")
+        .select("id, role, created_at, user_id")
         .eq("organization_id", orgId!)
         .order("created_at");
       if (error) throw error;
-      return data;
+      const ids = data.map((m) => m.user_id);
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", ids)
+        : { data: [] as { id: string; full_name: string | null; email: string | null; avatar_url: string | null }[] };
+      const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+      return data.map((m) => ({ ...m, profiles: byId.get(m.user_id) ?? null }));
     },
   });
 }
