@@ -24,7 +24,6 @@ export function BrandLock() {
       <span className="font-display text-sm font-semibold tracking-tight text-foreground">
         Nexa<span className="text-primary"> Flow</span> Seats
       </span>
-      <span className="ml-1 hidden font-mono text-[10px] text-subtle sm:inline">v2.4</span>
     </Link>
   );
 }
@@ -163,7 +162,7 @@ export function SectionHeading({
 }) {
   return (
     <div>
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+      <p className="font-mono text-[11px] text-primary">{eyebrow}</p>
       <h2 className="mt-3 max-w-[40ch] text-balance font-display text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
         {title}
       </h2>

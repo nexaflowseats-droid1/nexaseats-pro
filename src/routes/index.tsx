@@ -131,7 +131,7 @@ function Home() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">
+                  <span className="font-mono text-[11px] text-subtle">
                     {p.name}
                   </span>
                   {p.featured && (
