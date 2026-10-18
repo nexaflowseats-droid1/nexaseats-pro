@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check } from "lucide-react";
 import { MarketingPage, SectionHeading } from "@/components/marketing/SiteChrome";
 import { ConsolePreview } from "@/components/marketing/ConsolePreview";
+import { HeroScene, TiltCard } from "@/components/marketing/Hero3D";
 import { FEATURES, STEPS, PLANS } from "@/lib/marketing-data";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +30,7 @@ function Home() {
     <MarketingPage>
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
-        <div className="gridbg-fade pointer-events-none absolute inset-0" />
+        <HeroScene />
         <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 font-mono text-[11px] text-muted-foreground">
@@ -39,7 +40,7 @@ function Home() {
             <h1 className="mt-6 text-balance font-display text-4xl font-medium leading-[1.05] tracking-tight text-foreground sm:text-6xl">
               Smart Seating.
               <br />
-              <span className="text-primary">Seamless Events.</span>
+              <span className="text-gradient">Seamless Events.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-[62ch] text-pretty font-mono text-xs leading-relaxed text-muted-foreground sm:text-sm">
               Nexa Flow Seats helps event organizers manage guests, create intelligent seating
@@ -63,7 +64,7 @@ function Home() {
           </div>
 
           <div className="mt-16">
-            <ConsolePreview />
+            <TiltCard><ConsolePreview /></TiltCard>
           </div>
         </div>
       </section>
@@ -77,7 +78,7 @@ function Home() {
           />
           <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
-              <div key={f.title} className="bg-surface p-6 transition-colors hover:bg-elevated">
+              <div key={f.title} className="card-3d bg-surface p-6 hover:bg-elevated">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[11px] text-subtle">
                     {String(i + 1).padStart(2, "0")}
@@ -106,7 +107,7 @@ function Home() {
             {STEPS.map((s, i) => (
               <li
                 key={s}
-                className="flex items-center gap-4 rounded-lg border border-border bg-surface px-5 py-4"
+                className="card-3d flex items-center gap-4 rounded-lg border border-border bg-surface px-5 py-4"
               >
                 <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 font-mono text-xs text-primary ring-1 ring-primary/25">
                   {i + 1}
