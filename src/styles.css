@@ -163,3 +163,57 @@
 .seat-dot:hover {
   transform: scale(1.35);
 }
+
+/* ---------- Homepage 3D ---------- */
+.scene-3d { perspective: 1200px; }
+.floor-3d { transform-style: preserve-3d; transform: rotateX(62deg); }
+.floor-spin { transform-style: preserve-3d; animation: floor-spin 40s linear infinite; }
+.floor-grid {
+  background:
+    radial-gradient(circle, transparent 60%, var(--background) 72%),
+    repeating-radial-gradient(circle, color-mix(in oklab, var(--primary) 22%, transparent) 0 1px, transparent 1px 48px);
+  opacity: 0.6;
+}
+.table-3d {
+  background: linear-gradient(135deg, var(--elevated), var(--surface));
+  border: 1px solid color-mix(in oklab, var(--primary) 45%, transparent);
+  box-shadow: 0 0 30px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+.seat-3d {
+  box-shadow: 0 0 12px currentColor;
+  animation: seat-bob 3s ease-in-out infinite;
+}
+.glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  animation: orb-float 12s ease-in-out infinite;
+}
+.tilt-card {
+  transition: transform 0.25s ease-out;
+  transform-style: preserve-3d;
+  box-shadow: 0 40px 80px -30px color-mix(in oklab, var(--primary) 45%, transparent);
+}
+.card-3d { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.card-3d:hover {
+  transform: perspective(800px) rotateX(6deg) translateY(-4px);
+  box-shadow: 0 24px 40px -20px color-mix(in oklab, var(--primary) 50%, transparent);
+}
+.text-gradient {
+  background: linear-gradient(100deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@keyframes floor-spin { to { transform: rotateZ(360deg); } }
+@keyframes seat-bob {
+  0%, 100% { transform: translateZ(0); }
+  50% { transform: translateZ(14px); }
+}
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floor-spin, .seat-3d, .glow-orb { animation: none; }
+}

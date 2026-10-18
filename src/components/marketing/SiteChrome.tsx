@@ -11,7 +11,7 @@ export function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
     >
       <span
         className={`${dot} rounded-full bg-primary`}
-        style={{ boxShadow: "0 0 10px 2px oklch(0.807 0.132 76 / 0.6)" }}
+        style={{ boxShadow: "0 0 10px 2px color-mix(in oklab, var(--primary) 60%, transparent)" }}
       />
     </span>
   );
