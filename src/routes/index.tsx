@@ -4,6 +4,9 @@ import { MarketingPage, SectionHeading } from "@/components/marketing/SiteChrome
 import { ConsolePreview } from "@/components/marketing/ConsolePreview";
 import { HeroScene, TiltCard } from "@/components/marketing/Hero3D";
 import { FEATURES, STEPS, PLANS } from "@/lib/marketing-data";
+import galaImg from "@/assets/home-gala.jpg";
+import checkinImg from "@/assets/home-checkin.jpg";
+import weddingImg from "@/assets/home-wedding.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,6 +97,28 @@ function Home() {
                   {f.body}
                 </p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Showcase */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+          <SectionHeading eyebrow="Built for real events" title="From candlelit weddings to thousand-seat galas." />
+          <div className="mt-10 grid gap-4 md:grid-cols-3 md:grid-rows-2">
+            {[
+              { img: galaImg, w: 1280, h: 832, t: "Galas & awards", d: "Seat 1,000 guests with VIP rules and live floor control.", c: "md:col-span-2 md:row-span-2" },
+              { img: checkinImg, w: 1024, h: 1024, t: "QR check-in", d: "Scan, seat and track arrivals in real time.", c: "" },
+              { img: weddingImg, w: 1024, h: 1024, t: "Weddings", d: "Keep families together and conflicts apart.", c: "" },
+            ].map((x) => (
+              <figure key={x.t} className={`card-3d group relative overflow-hidden rounded-xl border border-border ${x.c}`}>
+                <img src={x.img} alt={x.t} width={x.w} height={x.h} loading="lazy" className="h-full min-h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/70 to-transparent p-5">
+                  <p className="font-display text-base font-medium text-foreground">{x.t}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{x.d}</p>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>

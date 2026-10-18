@@ -16,7 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SecurityRouteImport } from './routes/security'
 import { Route as SolutionsRouteImport } from './routes/solutions'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -69,9 +72,24 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
   path: '/solutions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -172,7 +190,10 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
   '/solutions': typeof SolutionsRoute
+  '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -198,7 +219,10 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
   '/solutions': typeof SolutionsRoute
+  '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -226,7 +250,10 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
   '/solutions': typeof SolutionsRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -254,7 +281,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/pricing'
+    | '/privacy'
+    | '/security'
     | '/solutions'
+    | '/terms'
     | '/admin'
     | '/analytics'
     | '/billing'
@@ -280,7 +310,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/pricing'
+    | '/privacy'
+    | '/security'
     | '/solutions'
+    | '/terms'
     | '/admin'
     | '/analytics'
     | '/billing'
@@ -307,7 +340,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/pricing'
+    | '/privacy'
+    | '/security'
     | '/solutions'
+    | '/terms'
     | '/_authenticated/admin'
     | '/_authenticated/analytics'
     | '/_authenticated/billing'
@@ -335,7 +371,10 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FeaturesRoute: typeof FeaturesRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  SecurityRoute: typeof SecurityRoute
   SolutionsRoute: typeof SolutionsRoute
+  TermsRoute: typeof TermsRoute
   ITokenRoute: typeof ITokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -391,11 +430,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/solutions': {
       id: '/solutions'
       path: '/solutions'
       fullPath: '/solutions'
       preLoaderRoute: typeof SolutionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -567,7 +627,10 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FeaturesRoute: FeaturesRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  SecurityRoute: SecurityRoute,
   SolutionsRoute: SolutionsRoute,
+  TermsRoute: TermsRoute,
   ITokenRoute: ITokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
