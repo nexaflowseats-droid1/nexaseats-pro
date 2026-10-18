@@ -97,42 +97,87 @@ export function SiteHeader() {
   );
 }
 
+const FOOTER_COLS = [
+  {
+    title: "Product",
+    links: [
+      { to: "/features", label: "Features" },
+      { to: "/pricing", label: "Pricing" },
+      { to: "/solutions", label: "Solutions" },
+      { to: "/auth", label: "Start free" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { to: "/about", label: "About" },
+      { to: "/contact", label: "Contact" },
+      { to: "/contact", label: "Book a demo" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { to: "/privacy", label: "Privacy policy" },
+      { to: "/terms", label: "Terms of service" },
+      { to: "/security", label: "Security" },
+    ],
+  },
+] as const;
+
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <BrandMark />
-            <span className="font-display text-sm font-semibold text-foreground">
-              Nexa Flow Seats
-            </span>
+    <footer className="relative overflow-hidden border-t border-border bg-surface/40">
+      <div className="glow-orb -bottom-20 left-1/3 size-72 bg-primary/10" aria-hidden />
+      <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8">
+        <div className="mb-12 flex flex-col items-start justify-between gap-6 rounded-xl border border-border bg-background/60 p-6 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-display text-lg font-medium text-foreground">
+              Ready to seat your next event?
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Free to start. Sample event included.
+            </p>
           </div>
-          <p className="mt-3 max-w-[34ch] font-mono text-xs leading-relaxed text-subtle">
-            Smart Seating. Seamless Events. Powered by AI. Built for event operations teams who run
-            it live.
-          </p>
+          <Link
+            to="/auth"
+            className="rounded-[8px] bg-primary px-5 py-2.5 font-display text-sm font-semibold text-primary-foreground hover:bg-primary-bright"
+          >
+            Start Free
+          </Link>
         </div>
-        <div className="flex gap-8 font-mono text-xs text-subtle">
-          <Link to="/features" className="hover:text-foreground">
-            Product
-          </Link>
-          <Link to="/solutions" className="hover:text-foreground">
-            Solutions
-          </Link>
-          <Link to="/pricing" className="hover:text-foreground">
-            Pricing
-          </Link>
-          <Link to="/contact" className="hover:text-foreground">
-            Contact
-          </Link>
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <BrandLock />
+            <p className="mt-4 max-w-[36ch] text-sm leading-relaxed text-muted-foreground">
+              Smart Seating. Seamless Events. Powered by AI. Guests, floor plans, QR check-in and
+              live operations in one place.
+            </p>
+          </div>
+          {FOOTER_COLS.map((col) => (
+            <div key={col.title}>
+              <p className="text-sm font-semibold text-foreground">{col.title}</p>
+              <ul className="mt-4 space-y-2.5">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link
+                      to={l.to}
+                      className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 font-mono text-[11px] text-subtle sm:px-8">
-          <span>© {new Date().getFullYear()} Nexa Flow Seats · SOC 2 Type II</span>
+      <div className="relative border-t border-border">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <span>© {new Date().getFullYear()} Nexa Flow Seats. All rights reserved.</span>
           <span className="flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-accent" />
+            <span className="size-1.5 rounded-full bg-success" />
             All systems operational
           </span>
         </div>
