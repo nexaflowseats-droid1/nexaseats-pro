@@ -15,6 +15,7 @@ import {
 } from "@/lib/billing.functions";
 import { EMAIL_STATUS_LABEL, resolveServiceValue } from "@/lib/billing";
 import { formatMoney } from "@/lib/pricing";
+import { AdminDashboard } from "@/components/app/AdminDashboard";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -48,7 +49,7 @@ const PROPOSED: Record<string, string> = {
   support_extended: "Priority Support",
 };
 
-function AdminPage() {
+function BillingConfig() {
   const qc = useQueryClient();
   const overview = useServerFn(adminOverview);
   const { data, error, isLoading } = useQuery({ queryKey: ["admin-overview"], queryFn: () => overview(), retry: false });
@@ -70,12 +71,10 @@ function AdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (isLoading) return <AppShell title="Admin"><p className="font-mono text-xs text-subtle">Loading…</p></AppShell>;
+  if (isLoading) return <p className="text-xs text-subtle">Loading…</p>;
   if (error || !data)
     return (
-      <AppShell title="Admin">
-        <Panel title="Access denied"><p className="font-mono text-xs text-muted-foreground">{(error as Error)?.message ?? "Administrator access required."}</p></Panel>
-      </AppShell>
+      <Panel title="Access denied"><p className="text-xs text-muted-foreground">{(error as Error)?.message ?? "Administrator access required."}</p></Panel>
     );
 
   const run = async (p: Promise<unknown>, ok: string) => {
@@ -84,8 +83,7 @@ function AdminPage() {
   };
 
   return (
-    <AppShell title="Admin" subtitle="Platform billing configuration">
-      <div className="space-y-4">
+    <div className="space-y-4">
         <Panel title="Business details on receipts">
           <div className="grid gap-3 sm:grid-cols-2">
             {BUSINESS.map(([k, label]) => (
@@ -176,7 +174,6 @@ function AdminPage() {
           )}
         </Panel>
       </div>
-    </AppShell>
   );
 }
 
@@ -199,5 +196,13 @@ function PackageRow({ pkg, setupDefault, supportDefault, onSave }: {
         <input className={input} placeholder={supportDefault ? `Inherits: ${supportDefault}` : "Blank"} value={support} onChange={(e) => setSupport(e.target.value)} /></label>
       <button type="button" onClick={() => onSave(setup, support)} className={`${btn} border border-border text-foreground hover:bg-secondary`}>Save</button>
     </div>
+  );
+}
+
+function AdminPage() {
+  return (
+    <AppShell title="Admin" subtitle="Platform control center">
+      <AdminDashboard billing={<BillingConfig />} />
+    </AppShell>
   );
 }

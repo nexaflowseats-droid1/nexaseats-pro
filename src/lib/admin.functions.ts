@@ -50,8 +50,11 @@ export const setAdminRole = createServerFn({ method: "POST" })
     if (!data.admin && data.userId === context.userId) throw new Error("You cannot remove your own admin access.");
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     if (data.admin) {
-      const { error } = await db.from("user_roles").upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" });
-      if (error) throw new Error(error.message);
+      const { data: ex } = await db.from("user_roles").select("id").eq("user_id", data.userId).eq("role", "admin").maybeSingle();
+      if (!ex) {
+        const { error } = await db.from("user_roles").insert({ user_id: data.userId, role: "admin" });
+        if (error) throw new Error(error.message);
+      }
     } else {
       const { error } = await db.from("user_roles").delete().eq("user_id", data.userId).eq("role", "admin");
       if (error) throw new Error(error.message);
