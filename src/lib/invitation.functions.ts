@@ -57,7 +57,7 @@ async function load(token: string): Promise<InvitationView | null> {
       .maybeSingle(),
     supabaseAdmin
       .from("events")
-      .select("name, description, event_date, start_time, end_time, venues(name, address)")
+      .select("name, description, event_date, start_time, end_time, schedule, menu, venues(name, address)")
       .eq("id", inv.event_id)
       .maybeSingle(),
   ]);
@@ -65,7 +65,7 @@ async function load(token: string): Promise<InvitationView | null> {
 
   const { data: assignment } = await supabaseAdmin
     .from("seating_assignments")
-    .select("event_tables(name, table_number)")
+    .select("event_tables(id, name, table_number)")
     .eq("guest_id", inv.guest_id)
     .maybeSingle();
 
@@ -179,5 +179,49 @@ export const submitRsvp = createServerFn({ method: "POST" })
         .eq("token", data.token);
     }
 
+    return await load(data.token);
+  });
+
+const photoSchema = z.object({
+  token: z.string().min(8).max(200),
+  dataUrl: z.string().max(7_000_000),
+  caption: z.string().max(200).optional(),
+});
+
+/** Guest photo upload via invitation token. Photos stay hidden until the organizer approves them. */
+export const uploadGuestPhoto = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => photoSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const match = /^data:(image\/(jpeg|png|webp));base64,(.+)$/.exec(data.dataUrl);
+    if (!match) throw new Error("Please upload a JPG, PNG or WebP image");
+    const bytes = Uint8Array.from(atob(match[3]), (c) => c.charCodeAt(0));
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Photo must be under 5MB");
+
+    const { data: inv } = await supabaseAdmin
+      .from("invitations")
+      .select("event_id, guest_id")
+      .eq("token", data.token)
+      .maybeSingle();
+    if (!inv) throw new Error("Invitation not found");
+
+    const { count } = await supabaseAdmin
+      .from("guest_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("guest_id", inv.guest_id);
+    if ((count ?? 0) >= 20) throw new Error("You've reached the 20 photo limit");
+
+    const ext = match[2] === "jpeg" ? "jpg" : match[2];
+    const path = `${inv.event_id}/guest-photos/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("event-images")
+      .upload(path, bytes, { contentType: match[1] });
+    if (upErr) throw new Error("Upload failed, please try again");
+    await supabaseAdmin.from("guest_photos").insert({
+      event_id: inv.event_id,
+      guest_id: inv.guest_id,
+      storage_path: path,
+      caption: data.caption || null,
+    });
     return await load(data.token);
   });
