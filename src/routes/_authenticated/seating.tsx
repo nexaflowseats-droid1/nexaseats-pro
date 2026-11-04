@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -26,6 +26,18 @@ import {
   type SeatingPlan,
 } from "@/lib/seating-ai.functions";
 import { generateSeatingPdf } from "@/lib/seating-pdf.functions";
+import type { LayoutElement } from "@/lib/event-experience.functions";
+
+const ELEMENT_KINDS: { kind: LayoutElement["kind"]; label: string; w: number; h: number }[] = [
+  { kind: "stage", label: "Stage", w: 320, h: 110 },
+  { kind: "dance", label: "Dance floor", w: 220, h: 220 },
+  { kind: "bar", label: "Bar", w: 200, h: 60 },
+  { kind: "dj", label: "DJ booth", w: 110, h: 80 },
+  { kind: "buffet", label: "Buffet", w: 240, h: 60 },
+  { kind: "entrance", label: "Entrance", w: 120, h: 40 },
+  { kind: "exit", label: "Exit", w: 90, h: 40 },
+];
+const elementLabel = (k: LayoutElement["kind"]) => ELEMENT_KINDS.find((e) => e.kind === k)?.label ?? k;
 
 const QUICK_COMMANDS = [
   "Seat all family members together",
@@ -69,6 +81,60 @@ function SeatingPage() {
   const dragState = useRef<{ id: string; startX: number; startY: number; ox: number; oy: number } | null>(
     null,
   );
+
+  const activeEvent = events.find((e) => e.id === eventId) as
+    | { layout_elements?: unknown; floorplan_path?: string | null; floorplan_opacity?: number }
+    | undefined;
+  const savedElements = useMemo(
+    () => (Array.isArray(activeEvent?.layout_elements) ? (activeEvent!.layout_elements as LayoutElement[]) : []),
+    [activeEvent],
+  );
+  const [elementDrafts, setElementDrafts] = useState<LayoutElement[] | null>(null);
+  const elements = elementDrafts ?? savedElements;
+  const elementDrag = useRef<{ id: string; startX: number; startY: number; ox: number; oy: number } | null>(null);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [opacity, setOpacity] = useState<number | null>(null);
+  const floorplanPath = activeEvent?.floorplan_path ?? null;
+  const shownOpacity = opacity ?? Number(activeEvent?.floorplan_opacity ?? 0.4);
+  const [floorplanUrl, setFloorplanUrl] = useState<string | null>(null);
+  useEffect(() => {
+    setElementDrafts(null);
+    setOpacity(null);
+    if (!floorplanPath) return setFloorplanUrl(null);
+    supabase.storage
+      .from("event-images")
+      .createSignedUrl(floorplanPath, 3600)
+      .then(({ data }) => setFloorplanUrl(data?.signedUrl ?? null));
+  }, [floorplanPath, eventId]);
+
+  const saveEvent = useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      const { error } = await supabase.from("events").update(patch as never).eq("id", eventId!);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const saveElements = (next: LayoutElement[]) => {
+    setElementDrafts(next);
+    saveEvent.mutate({ layout_elements: next });
+  };
+  const addElement = (kind: LayoutElement["kind"]) => {
+    const def = ELEMENT_KINDS.find((k) => k.kind === kind)!;
+    saveElements([
+      ...elements,
+      { id: crypto.randomUUID(), kind, x: CANVAS_W / 2 - def.w / 2, y: 20, w: def.w, h: def.h },
+    ]);
+  };
+  const uploadFloorplan = async (file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Upload a PNG or JPG image of the venue plan");
+    if (file.size > 10 * 1024 * 1024) return toast.error("Image must be under 10MB");
+    const path = `${eventId}/floorplan-${Date.now()}.${file.name.split(".").pop() ?? "png"}`;
+    const { error } = await supabase.storage.from("event-images").upload(path, file, { contentType: file.type });
+    if (error) return toast.error(error.message);
+    saveEvent.mutate({ floorplan_path: path });
+    toast.success("Venue floor plan uploaded");
+  };
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["event_tables", eventId] });
@@ -295,6 +361,21 @@ function SeatingPage() {
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    const es = elementDrag.current;
+    if (es) {
+      setElementDrafts(
+        elements.map((el) =>
+          el.id === es.id
+            ? {
+                ...el,
+                x: Math.max(0, Math.min(CANVAS_W - el.w, es.ox + (e.clientX - es.startX) / zoom)),
+                y: Math.max(0, Math.min(CANVAS_H - el.h, es.oy + (e.clientY - es.startY) / zoom)),
+              }
+            : el,
+        ),
+      );
+      return;
+    }
     const st = dragState.current;
     if (!st) return;
     const x = Math.max(0, Math.min(CANVAS_W - TABLE_SIZE, st.ox + (e.clientX - st.startX) / zoom));
@@ -303,6 +384,15 @@ function SeatingPage() {
   };
 
   const onPointerUp = () => {
+    const es = elementDrag.current;
+    if (es) {
+      elementDrag.current = null;
+      const el = elements.find((x) => x.id === es.id);
+      if (el && (Math.abs(el.x - es.ox) > 2 || Math.abs(el.y - es.oy) > 2)) {
+        saveElements(elements.map((x) => ({ ...x, x: Math.round(x.x), y: Math.round(x.y) })));
+      } else setSelectedElement((cur) => (cur === es.id ? null : es.id));
+      return;
+    }
     const st = dragState.current;
     dragState.current = null;
     if (!st) return;
@@ -522,7 +612,75 @@ function SeatingPage() {
                 </div>
               }
             >
-              {(tables ?? []).length === 0 ? (
+              {editable && (
+                <div className="mb-3 space-y-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">Add to room:</span>
+                    {ELEMENT_KINDS.map((k) => (
+                      <button
+                        key={k.kind}
+                        type="button"
+                        onClick={() => addElement(k.kind)}
+                        className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary/50 hover:text-primary"
+                      >
+                        + {k.label}
+                      </button>
+                    ))}
+                    {selectedElement && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveElements(elements.filter((x) => x.id !== selectedElement));
+                          setSelectedElement(null);
+                        }}
+                        className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive"
+                      >
+                        Remove {elementLabel(elements.find((x) => x.id === selectedElement)?.kind ?? "stage")}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="cursor-pointer rounded-[8px] border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-primary/50">
+                      {floorplanPath ? "Replace venue plan" : "Upload venue plan image"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void uploadFloorplan(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {floorplanPath && (
+                      <>
+                        <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          Plan visibility
+                          <input
+                            type="range"
+                            min={0.1}
+                            max={1}
+                            step={0.05}
+                            value={shownOpacity}
+                            onChange={(e) => setOpacity(Number(e.target.value))}
+                            onPointerUp={() => saveEvent.mutate({ floorplan_opacity: shownOpacity })}
+                            aria-label="Venue plan visibility"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => saveEvent.mutate({ floorplan_path: null })}
+                          className="text-[11px] text-subtle hover:text-destructive"
+                        >
+                          Remove plan
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              {(tables ?? []).length === 0 && elements.length === 0 && !floorplanUrl ? (
                 <EmptyState title="No tables yet" body="Add your first table to start the layout." />
               ) : (
                 <div className="grid-bg relative max-h-[620px] overflow-auto rounded-[10px] border border-border">
@@ -539,6 +697,35 @@ function SeatingPage() {
                       onPointerMove={onPointerMove}
                       onPointerUp={onPointerUp}
                     >
+                      {floorplanUrl && (
+                        <img
+                          src={floorplanUrl}
+                          alt="Venue floor plan"
+                          className="pointer-events-none absolute inset-0 size-full object-contain"
+                          style={{ opacity: shownOpacity }}
+                        />
+                      )}
+                      {elements.map((el) => (
+                        <div
+                          key={el.id}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={elementLabel(el.kind)}
+                          onPointerDown={(e) => {
+                            if (!editable) return;
+                            elementDrag.current = { id: el.id, startX: e.clientX, startY: e.clientY, ox: el.x, oy: el.y };
+                            (e.target as HTMLElement).setPointerCapture(e.pointerId);
+                          }}
+                          style={{ left: el.x, top: el.y, width: el.w, height: el.h }}
+                          className={`absolute grid touch-none select-none place-items-center rounded-[10px] border border-dashed text-xs font-medium ${
+                            selectedElement === el.id
+                              ? "border-primary bg-primary/20 text-primary"
+                              : "border-accent/60 bg-accent/10 text-accent"
+                          } ${editable ? "cursor-grab" : ""}`}
+                        >
+                          {elementLabel(el.kind)}
+                        </div>
+                      ))}
                       {(tables ?? []).map((t) => {
                         const seated = (assignments ?? []).filter((a) => a.table_id === t.id);
                         const over = seated.length > t.capacity;
