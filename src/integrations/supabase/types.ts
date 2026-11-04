@@ -380,9 +380,15 @@ export type Database = {
           description: string | null
           end_time: string | null
           event_date: string | null
+          floorplan_opacity: number
+          floorplan_path: string | null
           id: string
+          kiosk_enabled: boolean
+          layout_elements: Json
+          menu: Json
           name: string
           organization_id: string
+          schedule: Json
           start_time: string | null
           status: Database["public"]["Enums"]["event_status"]
           updated_at: string
@@ -397,9 +403,15 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           event_date?: string | null
+          floorplan_opacity?: number
+          floorplan_path?: string | null
           id?: string
+          kiosk_enabled?: boolean
+          layout_elements?: Json
+          menu?: Json
           name: string
           organization_id: string
+          schedule?: Json
           start_time?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
@@ -414,9 +426,15 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           event_date?: string | null
+          floorplan_opacity?: number
+          floorplan_path?: string | null
           id?: string
+          kiosk_enabled?: boolean
+          layout_elements?: Json
+          menu?: Json
           name?: string
           organization_id?: string
+          schedule?: Json
           start_time?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
@@ -604,6 +622,51 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_photos: {
+        Row: {
+          approved: boolean
+          caption: string | null
+          created_at: string
+          event_id: string
+          guest_id: string | null
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          approved?: boolean
+          caption?: string | null
+          created_at?: string
+          event_id: string
+          guest_id?: string | null
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          approved?: boolean
+          caption?: string | null
+          created_at?: string
+          event_id?: string
+          guest_id?: string | null
+          id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_photos_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
             referencedColumns: ["id"]
           },
         ]

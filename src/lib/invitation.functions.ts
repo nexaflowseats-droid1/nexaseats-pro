@@ -28,7 +28,14 @@ export type InvitationView = {
   };
   message: string | null;
   table: { name: string; table_number: number } | null;
+  tablemates: string[];
+  schedule: ScheduleItem[];
+  menu: MenuItem[];
+  photos: { id: string; url: string; caption: string | null; pending: boolean }[];
 };
+
+export type ScheduleItem = { time: string; title: string; description?: string };
+export type MenuItem = { course: string; name: string; description?: string; tags?: string };
 
 async function load(token: string): Promise<InvitationView | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -50,7 +57,7 @@ async function load(token: string): Promise<InvitationView | null> {
       .maybeSingle(),
     supabaseAdmin
       .from("events")
-      .select("name, description, event_date, start_time, end_time, venues(name, address)")
+      .select("name, description, event_date, start_time, end_time, schedule, menu, venues(name, address)")
       .eq("id", inv.event_id)
       .maybeSingle(),
   ]);
@@ -58,7 +65,7 @@ async function load(token: string): Promise<InvitationView | null> {
 
   const { data: assignment } = await supabaseAdmin
     .from("seating_assignments")
-    .select("event_tables(name, table_number)")
+    .select("event_tables(id, name, table_number)")
     .eq("guest_id", inv.guest_id)
     .maybeSingle();
 
@@ -66,9 +73,42 @@ async function load(token: string): Promise<InvitationView | null> {
     .venues;
   const tbl = (
     assignment as unknown as {
-      event_tables: { name: string; table_number: number } | null
+      event_tables: { id: string; name: string; table_number: number } | null
     } | null
   )?.event_tables;
+
+  // Tablemates: first name + last initial only, to keep other guests' details private.
+  let tablemates: string[] = [];
+  if (tbl?.id) {
+    const { data: mates } = await supabaseAdmin
+      .from("seating_assignments")
+      .select("guest_id, guests(first_name, last_name)")
+      .eq("table_id", tbl.id);
+    tablemates = (mates ?? [])
+      .filter((m) => m.guest_id !== inv.guest_id)
+      .map((m) => {
+        const g = m.guests as unknown as { first_name: string; last_name: string } | null;
+        return g ? `${g.first_name} ${g.last_name.charAt(0)}.` : "";
+      })
+      .filter(Boolean);
+  }
+
+  const { data: photoRows } = await supabaseAdmin
+    .from("guest_photos")
+    .select("id, storage_path, caption, approved, guest_id")
+    .eq("event_id", inv.event_id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  const visible = (photoRows ?? []).filter((p) => p.approved || p.guest_id === inv.guest_id);
+  const photos: InvitationView["photos"] = [];
+  for (const p of visible) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from("event-images")
+      .createSignedUrl(p.storage_path, 3600);
+    if (signed) photos.push({ id: p.id, url: signed.signedUrl, caption: p.caption, pending: !p.approved });
+  }
+
+  const ev = event as unknown as { schedule: unknown; menu: unknown };
 
   return {
     guest: { first_name: guest.first_name, last_name: guest.last_name, email: guest.email },
@@ -87,6 +127,10 @@ async function load(token: string): Promise<InvitationView | null> {
     },
     message: inv.message,
     table: tbl ? { name: tbl.name, table_number: tbl.table_number } : null,
+    tablemates,
+    schedule: Array.isArray(ev.schedule) ? (ev.schedule as ScheduleItem[]) : [],
+    menu: Array.isArray(ev.menu) ? (ev.menu as MenuItem[]) : [],
+    photos,
   };
 }
 
@@ -135,5 +179,49 @@ export const submitRsvp = createServerFn({ method: "POST" })
         .eq("token", data.token);
     }
 
+    return await load(data.token);
+  });
+
+const photoSchema = z.object({
+  token: z.string().min(8).max(200),
+  dataUrl: z.string().max(7_000_000),
+  caption: z.string().max(200).optional(),
+});
+
+/** Guest photo upload via invitation token. Photos stay hidden until the organizer approves them. */
+export const uploadGuestPhoto = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => photoSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const match = /^data:(image\/(jpeg|png|webp));base64,(.+)$/.exec(data.dataUrl);
+    if (!match) throw new Error("Please upload a JPG, PNG or WebP image");
+    const bytes = Uint8Array.from(atob(match[3]), (c) => c.charCodeAt(0));
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Photo must be under 5MB");
+
+    const { data: inv } = await supabaseAdmin
+      .from("invitations")
+      .select("event_id, guest_id")
+      .eq("token", data.token)
+      .maybeSingle();
+    if (!inv) throw new Error("Invitation not found");
+
+    const { count } = await supabaseAdmin
+      .from("guest_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("guest_id", inv.guest_id);
+    if ((count ?? 0) >= 20) throw new Error("You've reached the 20 photo limit");
+
+    const ext = match[2] === "jpeg" ? "jpg" : match[2];
+    const path = `${inv.event_id}/guest-photos/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("event-images")
+      .upload(path, bytes, { contentType: match[1] });
+    if (upErr) throw new Error("Upload failed, please try again");
+    await supabaseAdmin.from("guest_photos").insert({
+      event_id: inv.event_id,
+      guest_id: inv.guest_id,
+      storage_path: path,
+      caption: data.caption || null,
+    });
     return await load(data.token);
   });
