@@ -303,9 +303,9 @@ export const generatePrintables = createServerFn({ method: "POST" })
     await supabase.from("pdf_generations").insert({
       organization_id: event.organization_id,
       event_id: event.id,
-      document_type: data.kind,
-      file_path: path,
-      generated_by: userId,
-    } as never);
+      type: data.kind,
+      file_url: path,
+      created_by: userId,
+    });
     return { path, count: guests.length };
   });
