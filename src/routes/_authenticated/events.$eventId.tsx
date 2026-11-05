@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { AppShell, Panel, StatCard, EmptyState } from "@/components/app/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg, canManageEvents } from "@/lib/org-context";
+import { EventExperiencePanel } from "@/components/app/EventExperiencePanel";
 import {
   useEvent,
   useGuests,
@@ -366,6 +367,11 @@ function EventDetailPage() {
             </form>
           )}
         </Panel>
+      )}
+      {tab === "Settings" && editable && (
+        <div className="mt-4">
+          <EventExperiencePanel eventId={event.id} />
+        </div>
       )}
     </AppShell>
   );

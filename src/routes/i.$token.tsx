@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarDays, MapPin, Clock, Check, X, HelpCircle } from "lucide-react";
 import { BrandMark } from "@/components/marketing/SiteChrome";
-import { getInvitation, submitRsvp, type InvitationView } from "@/lib/invitation.functions";
+import { getInvitation, submitRsvp, uploadGuestPhoto, type InvitationView } from "@/lib/invitation.functions";
 import { formatDate, formatTime } from "@/lib/queries";
 
 export const Route = createFileRoute("/i/$token")({
@@ -123,6 +123,53 @@ function InvitationPage() {
         </p>
       )}
 
+      {data.event.event_date && <Countdown date={data.event.event_date} time={data.event.start_time} />}
+
+      {data.tablemates.length > 0 && (
+        <div className="mt-4">
+          <p className="label-mono">Sharing your table</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {data.tablemates.map((n, i) => (
+              <span key={i} className="rounded-full border border-border bg-elevated px-2.5 py-1 text-xs text-foreground">{n}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {data.schedule.length > 0 && (
+        <div className="mt-5">
+          <p className="label-mono">Schedule</p>
+          <ol className="mt-2 space-y-2 border-l border-border pl-4">
+            {data.schedule.map((s, i) => (
+              <li key={i}>
+                <p className="text-sm text-foreground"><span className="mr-2 font-semibold text-primary">{s.time}</span>{s.title}</p>
+                {s.description && <p className="text-xs text-muted-foreground">{s.description}</p>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {data.menu.length > 0 && (
+        <div className="mt-5">
+          <p className="label-mono">Menu</p>
+          <ul className="mt-2 space-y-2">
+            {data.menu.map((m, i) => (
+              <li key={i} className="rounded-[8px] border border-border bg-elevated px-3 py-2">
+                <p className="text-[11px] text-subtle">{m.course}</p>
+                <p className="text-sm text-foreground">
+                  {m.name}
+                  {m.tags && <span className="ml-2 text-[11px] text-accent">{m.tags}</span>}
+                </p>
+                {m.description && <p className="text-xs text-muted-foreground">{m.description}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <PhotoWall token={token} photos={data.photos} onUpdate={(v) => qc.setQueryData(["invitation", token], v)} />
+
       {data.message && (
         <p className="mt-4 rounded-[8px] border border-border bg-elevated px-3 py-2 text-sm text-muted-foreground">
           {data.message}
@@ -224,6 +271,85 @@ function InvitationPage() {
         </div>
       </form>
     </Frame>
+  );
+}
+
+function Countdown({ date, time }: { date: string; time: string | null }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (now === null) return null;
+  const target = new Date(`${date}T${time ?? "00:00"}`).getTime();
+  const diff = target - now;
+  if (diff <= 0) return <p className="mt-4 text-sm font-medium text-accent">The event has started. Enjoy!</p>;
+  const parts = [
+    ["Days", Math.floor(diff / 86400000)],
+    ["Hours", Math.floor(diff / 3600000) % 24],
+    ["Minutes", Math.floor(diff / 60000) % 60],
+    ["Seconds", Math.floor(diff / 1000) % 60],
+  ] as const;
+  return (
+    <div className="mt-4 grid grid-cols-4 gap-2">
+      {parts.map(([label, v]) => (
+        <div key={label} className="rounded-[8px] border border-border bg-elevated py-2 text-center">
+          <p className="text-xl font-semibold tabular-nums text-foreground">{String(v).padStart(2, "0")}</p>
+          <p className="text-[10px] text-subtle">{label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PhotoWall({
+  token,
+  photos,
+  onUpdate,
+}: {
+  token: string;
+  photos: InvitationView["photos"];
+  onUpdate: (v: InvitationView | null) => void;
+}) {
+  const upload = useServerFn(uploadGuestPhoto);
+  const m = useMutation({
+    mutationFn: async (file: File) => {
+      if (file.size > 5 * 1024 * 1024) throw new Error("Photo must be under 5MB");
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result));
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      return (await upload({ data: { token, dataUrl } })) as InvitationView | null;
+    },
+    onSuccess: onUpdate,
+  });
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between">
+        <p className="label-mono">Event photos</p>
+        <label className="cursor-pointer rounded-[8px] border border-border px-2.5 py-1 text-xs text-foreground hover:border-primary/50">
+          {m.isPending ? "Uploading…" : "Share a photo"}
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={m.isPending}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) m.mutate(f); e.target.value = ""; }} />
+        </label>
+      </div>
+      {m.isError && <p className="mt-1 text-xs text-destructive">{(m.error as Error).message}</p>}
+      {photos.length === 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground">No photos yet. Be the first to share one.</p>
+      ) : (
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {photos.map((p) => (
+            <div key={p.id} className="relative overflow-hidden rounded-[8px] border border-border">
+              <img src={p.url} alt={p.caption ?? "Event photo"} className="aspect-square w-full object-cover" loading="lazy" />
+              {p.pending && <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1.5 text-[10px] text-muted-foreground">Awaiting approval</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

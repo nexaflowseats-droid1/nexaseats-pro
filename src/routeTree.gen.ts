@@ -34,6 +34,7 @@ import { Route as AuthenticatedSeatingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as ITokenRouteImport } from './routes/i.$token'
+import { Route as KioskEventIdRouteImport } from './routes/kiosk.$eventId'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -164,6 +165,11 @@ const ITokenRoute = ITokenRouteImport.update({
   path: '/i/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KioskEventIdRoute = KioskEventIdRouteImport.update({
+  id: '/kiosk/$eventId',
+  path: '/kiosk/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEventsIndexRoute =
   AuthenticatedEventsIndexRouteImport.update({
     id: '/events/',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/i/$token': typeof ITokenRoute
+  '/kiosk/$eventId': typeof KioskEventIdRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/i/$token': typeof ITokenRoute
+  '/kiosk/$eventId': typeof KioskEventIdRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/i/$token': typeof ITokenRoute
+  '/kiosk/$eventId': typeof KioskEventIdRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/i/$token'
+    | '/kiosk/$eventId'
     | '/events/$eventId'
     | '/events/'
     | '/api/public/payments/webhook'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/i/$token'
+    | '/kiosk/$eventId'
     | '/events/$eventId'
     | '/events'
     | '/api/public/payments/webhook'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/i/$token'
+    | '/kiosk/$eventId'
     | '/_authenticated/events/$eventId'
     | '/_authenticated/events/'
     | '/api/public/payments/webhook'
@@ -376,6 +388,7 @@ export interface RootRouteChildren {
   SolutionsRoute: typeof SolutionsRoute
   TermsRoute: typeof TermsRoute
   ITokenRoute: typeof ITokenRoute
+  KioskEventIdRoute: typeof KioskEventIdRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -556,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ITokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kiosk/$eventId': {
+      id: '/kiosk/$eventId'
+      path: '/kiosk/$eventId'
+      fullPath: '/kiosk/$eventId'
+      preLoaderRoute: typeof KioskEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/events/': {
       id: '/_authenticated/events/'
       path: '/events'
@@ -632,6 +652,7 @@ const rootRouteChildren: RootRouteChildren = {
   SolutionsRoute: SolutionsRoute,
   TermsRoute: TermsRoute,
   ITokenRoute: ITokenRoute,
+  KioskEventIdRoute: KioskEventIdRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

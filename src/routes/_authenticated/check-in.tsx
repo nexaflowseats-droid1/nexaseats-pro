@@ -7,6 +7,9 @@ import { AppShell, Panel, EmptyState, StatCard } from "@/components/app/AppShell
 import { EventPicker, useActiveEvent } from "@/components/app/EventPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useCheckIns, useGuests } from "@/lib/queries";
+import { useServerFn } from "@tanstack/react-start";
+import { QrScanner } from "@/components/app/QrScanner";
+import { checkInByCode, type ScanResult } from "@/lib/event-experience.functions";
 
 export const Route = createFileRoute("/_authenticated/check-in")({
   head: () => ({
@@ -73,6 +76,24 @@ function CheckInPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const scanFn = useServerFn(checkInByCode);
+  const [scan, setScan] = useState<ScanResult | null>(null);
+  const [manualCode, setManualCode] = useState("");
+  const handleCode = async (code: string) => {
+    if (!eventId) return;
+    try {
+      const res = await scanFn({ data: { eventId, code } });
+      setScan(res);
+      if (res.ok) {
+        if (!res.already) toast.success(`${res.guest.name} checked in`);
+        else toast.info(`${res.guest.name} was already checked in`);
+        queryClient.invalidateQueries({ queryKey: ["check_ins", eventId] });
+      } else toast.error(res.reason);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   const q = search.trim().toLowerCase();
   const results = (guests ?? []).filter(
     (g) =>
@@ -104,6 +125,53 @@ function CheckInPage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
+            <Panel title="Scan QR code">
+              <QrScanner onCode={handleCode} />
+              <form
+                className="mt-3 flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (manualCode.trim().length >= 4) void handleCode(manualCode.trim());
+                  setManualCode("");
+                }}
+              >
+                <input
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Or type / paste an invitation code"
+                  aria-label="Invitation code"
+                  className="flex-1 rounded-[8px] border border-input bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-primary/60"
+                />
+                <button type="submit" className="rounded-[8px] border border-border px-3 text-xs text-foreground hover:border-primary/50">
+                  Check in
+                </button>
+              </form>
+              {scan && (
+                <div
+                  className={`mt-3 rounded-[10px] border p-3 ${
+                    scan.ok ? "border-accent/40 bg-accent/10" : "border-destructive/40 bg-destructive/10"
+                  }`}
+                >
+                  {scan.ok ? (
+                    <>
+                      <p className="text-sm font-semibold text-foreground">
+                        {scan.guest.name}
+                        {scan.guest.vip && <span className="text-primary"> ★ VIP</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {scan.already ? "Already checked in" : "Checked in just now"} ·{" "}
+                        {scan.table ?? "No table assigned"}
+                      </p>
+                      {scan.guest.dietary && (
+                        <p className="mt-1 text-xs text-accent">Dietary: {scan.guest.dietary}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-destructive">{scan.reason}</p>
+                  )}
+                </div>
+              )}
+            </Panel>
             <Panel title="Find a guest">
               <input
                 value={search}
